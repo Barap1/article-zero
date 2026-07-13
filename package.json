@@ -1,0 +1,62 @@
+{
+  "name": "article-zero",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "check:boundaries": "node scripts/check-client-boundaries.mjs",
+    "check:assets": "node scripts/verify-generated-assets.mjs",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm check:assets && pnpm build"
+  },
+  "dependencies": {
+    "@xyflow/react": "12.11.2",
+    "clsx": "2.1.1",
+    "groq-sdk": "1.3.0",
+    "lucide-react": "1.24.0",
+    "motion": "12.42.2",
+    "next": "15.5.20",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "server-only": "0.0.1",
+    "tailwind-merge": "3.6.0",
+    "zod": "4.4.3",
+    "zustand": "5.0.14"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.3.6",
+    "@playwright/test": "1.61.1",
+    "@tailwindcss/postcss": "4.3.2",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "@types/node": "26.1.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitest/coverage-v8": "4.1.10",
+    "eslint": "9.39.5",
+    "eslint-config-next": "15.5.20",
+    "jsdom": "29.1.1",
+    "prettier": "3.9.5",
+    "tailwindcss": "4.3.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  },
+  "pnpm": {
+    "overrides": {
+      "postcss": "8.5.10"
+    }
+  }
+}
