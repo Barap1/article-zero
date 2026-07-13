@@ -1,0 +1,21 @@
+export const ACTOR_ROLES = ["emergency_responder", "hospital_staff", "privacy_officer", "unknown"] as const;
+export const TOOL_NAMES = ["search_patients", "read_patient_record", "disclose_patient_data", "send_staff_message", "verify_responder_credentials", "request_human_approval", "trigger_emergency_alert", "write_audit_event"] as const;
+export const REQUEST_PURPOSES = ["treatment", "emergency_response", "operations", "privacy_review", "unknown"] as const;
+export const PATIENT_FIELDS = ["fullName", "dateOfBirth", "bloodType", "criticalAllergies", "currentEmergencyMedications", "emergencyWarningFlags", "diagnoses", "homeAddress", "insuranceInformation", "emergencyContacts", "clinicalNotes"] as const;
+export const MINIMUM_EMERGENCY_FIELDS = ["fullName", "bloodType", "criticalAllergies", "currentEmergencyMedications", "emergencyWarningFlags"] as const;
+export const BREAK_GLASS_EMERGENCY_FIELDS = ["bloodType", "criticalAllergies", "emergencyWarningFlags"] as const;
+export const FACT_KEYS = ["actor.role", "actor.identityVerified", "actor.organizationVerified", "emergency.credible", "emergency.imminent", "emergency.threatToLife", "emergency.evidenceSource", "patient.id", "request.purpose", "request.requestedFields", "approval.status", "approval.approverRole", "tool.name"] as const;
+export const CONDITION_OPERATORS = ["EQUALS", "NOT_EQUALS", "IN", "CONTAINS_ANY", "CONTAINS_ALL"] as const;
+export const POLICY_EFFECTS = ["ALLOW", "DENY", "ALLOW_WITH_FIELD_FILTER", "REQUIRE_HUMAN_APPROVAL"] as const;
+export const SEVERITIES = ["critical", "high", "warning", "informational"] as const;
+export const TRUTH_VALUES = ["TRUE", "FALSE", "UNKNOWN"] as const;
+
+export type ActorRole = (typeof ACTOR_ROLES)[number];
+export type ToolName = (typeof TOOL_NAMES)[number];
+export type RequestPurpose = (typeof REQUEST_PURPOSES)[number];
+export type PatientField = (typeof PATIENT_FIELDS)[number];
+export type FactKey = (typeof FACT_KEYS)[number];
+export type ConditionOperator = (typeof CONDITION_OPERATORS)[number];
+export type PolicyEffect = (typeof POLICY_EFFECTS)[number];
+export type Severity = (typeof SEVERITIES)[number];
+export type TruthValue = (typeof TRUTH_VALUES)[number];
