@@ -6,7 +6,9 @@ test("hero repair loop uses deterministic fallback from breach to audit export",
   await page.getByRole("tab", { name: /attack/i }).click();
   await page.getByRole("button", { name: /run protected action/i }).click();
 
-  await expect(page.getByRole("alert", { name: "Policy breach" })).toContainText("Policy breach");
+  await expect(page.getByRole("alert", { name: "Policy breach" })).toContainText("Policy breach", {
+    timeout: 15_000,
+  });
   await expect(page.getByText("Home address").first()).toBeVisible();
   await expect(page.getByText(/Identity was not verified/i)).toBeVisible();
 

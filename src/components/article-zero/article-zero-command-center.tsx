@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 
 import type { WorkspaceState } from "../../domain/schemas";
 import { analyzePolicyBundle } from "../../policy-engine/analyze-policy-bundle";
@@ -86,6 +87,10 @@ export function ArticleZeroCommandCenter() {
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => { void hydrate(); }, [hydrate]);
+  useEffect(() => {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [workspace.demoStage, showBriefing]);
   useDemoKeyboardShortcuts();
   useProviderHealth(hasHydrated);
 
@@ -120,19 +125,27 @@ export function ArticleZeroCommandCenter() {
 
   return (
     <main className="az-shell">
+      <a className="az-skip-link" href="#article-zero-main">Skip to command surface</a>
       <AppHeader workspace={workspace} onReset={() => setResetOpen(true)} onExport={() => { void handleExport(); }} onOpenAudit={() => setAuditOpen(true)} isExporting={isExporting} />
       <div className="az-command-layout">
         <aside className="az-sidebar">
           <DemoStageRail activeStage={workspace.demoStage} onStageChange={setDemoStage} />
           <div className="az-sidebar-footer"><span className="az-sidebar-footer-label">Local workspace</span><span>Browser persistence on</span></div>
         </aside>
-        <div className="az-main-surface">
+        <div className="az-main-surface" id="article-zero-main" tabIndex={-1}>
+          <MotionConfig reducedMotion="user" transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
+          <AnimatePresence initial={false}>
+          <motion.div className="az-stage-transition" key={showBriefing ? "briefing" : workspace.demoStage} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
           {showBriefing ? <DemoBriefing onOpenConstitution={openConstitution} onRunGuidedDemo={openConstitution} /> : workspace.demoStage === "CONSTITUTION" || workspace.demoStage === "AMENDMENT" ? <><ConstitutionWorkspace /><PolicyReview /></> : workspace.demoStage === "ATTACK" || workspace.demoStage === "INCIDENT" ? <AttackArena key={workspace.demoStage} version={activeVersion} {...(workspace.demoStage === "INCIDENT" && selectedAttackRun !== undefined ? { initialRun: selectedAttackRun } : {})} onAddAttackRun={addAttackRun} onAddAuditEvents={addAuditEvents} onAdvanceToAmendment={() => { editClause("clause.emergency-response", HERO_AMENDMENT); selectClause("clause.emergency-response"); setDemoStage("AMENDMENT"); }} /> : workspace.demoStage === "TESTING" ? (() => {
             const draft = workspace.versions.find((version) => version.id === workspace.draftVersionId);
             if (draft === undefined) return <StagePlaceholder stage="TESTING" />;
             const issues = analyzePolicyBundle(draft.policyBundle);
             return <ActivationPanel draft={draft} workspace={workspace} issues={issues} onRun={async (version) => { await runRegression.submit(version); }} onActivate={async () => { const result = await activateConstitution.submit({ workspace, draftVersionId: draft.id, issues }); if (result !== null) setDemoStage("REPLAY"); }} onAcknowledge={acknowledgeIssue} />;
           })() : workspace.demoStage === "REPLAY" ? <ReplayComparison activeVersion={activeVersion} legacyAttack={workspace.attackRuns.find((run) => run.scenarioId === "scenario.fake-responder-full-record" && run.constitutionVersionId !== activeVersion.id)} onAddAttackRun={addAttackRun} onAddAuditEvents={addAuditEvents} onComplete={() => setDemoStage("COMPLETE")} /> : <StagePlaceholder stage={workspace.demoStage} />}
+          </motion.div>
+          </AnimatePresence>
+          </MotionConfig>
+          <footer className="az-footer">Hackathon prototype. Synthetic data. Not for clinical use.</footer>
         </div>
       </div>
       <ResetDemoDialog open={resetOpen} isResetting={isResetting} onCancel={() => setResetOpen(false)} onConfirm={() => { void handleReset(); }} />

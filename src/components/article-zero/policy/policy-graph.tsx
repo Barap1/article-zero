@@ -69,7 +69,7 @@ export function PolicyGraph({ clauses, rules, issues, onSelectClause, onSelectRu
   };
   return <section className="az-policy-graph" aria-labelledby="policy-graph-title">
     <div className="az-section-heading"><div><p className="az-eyebrow">Compiled-policy map</p><h2 id="policy-graph-title">Policy graph</h2></div><span className="az-help-text">Clauses compile into rules; rules apply to tools.</span></div>
-    <div className="az-flow-canvas" aria-label="Interactive policy graph"><ReactFlow nodes={nodes} edges={edges} fitView nodesFocusable onNodeClick={(_, node) => select(node.id)}><Background /><Controls showInteractive={false} /></ReactFlow></div>
+    <div className="az-flow-canvas" aria-label="Interactive policy graph"><ReactFlow nodes={nodes} edges={edges} fitView fitViewOptions={{ padding: 0.18 }} minZoom={0.4} maxZoom={1.5} nodesDraggable={false} nodesConnectable={false} nodesFocusable onNodeClick={(_, node) => select(node.id)}><Background color="#c8c0af" gap={24} size={1} /><Controls showInteractive={false} /></ReactFlow></div>
     <section className="az-graph-list" aria-label="Policy graph text alternative"><h3>Graph text alternative</h3><ul>{[...targets.entries()].map(([nodeId, target]) => <li key={nodeId} aria-current={target.kind === "rule" && highlightedRuleIds.includes(target.targetId) ? "step" : undefined}>{target.kind === "tool" ? <span>{target.label}</span> : <button type="button" className="az-text-button" onClick={() => select(nodeId)}>{target.kind}: {target.label}</button>}</li>)}</ul></section>
   </section>;
 }

@@ -36,7 +36,7 @@ describe("verify-generated-assets", () => {
     const root = createFixture();
     const generated = join(root, "public", "generated");
     mkdirSync(generated, { recursive: true });
-    for (const name of ["article-zero-seal.webp", "constitutional-field.webm", "constitutional-field-poster.webp"]) {
+    for (const name of ["article-zero-seal.webp", "breach-lattice.webp", "verified-lattice.webp"]) {
       writeFileSync(join(generated, name), "fixture");
     }
 

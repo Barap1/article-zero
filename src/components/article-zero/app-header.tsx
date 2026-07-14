@@ -1,6 +1,7 @@
 "use client";
 
-import { ClipboardList, Download, RotateCcw, ShieldCheck } from "lucide-react";
+import Image from "next/image";
+import { ClipboardList, Download, RotateCcw } from "lucide-react";
 
 import type { WorkspaceState } from "../../domain/schemas";
 import { ProviderStatusBadge } from "./provider-status-badge";
@@ -26,7 +27,7 @@ export function AppHeader({ workspace, onReset, onExport, onOpenAudit, isExporti
   return (
     <header className="az-header">
       <div className="az-brand-lockup">
-        <div className="az-seal" aria-hidden="true"><ShieldCheck size={19} strokeWidth={1.8} /></div>
+        <Image className="az-seal" src="/generated/article-zero-seal.webp" width={48} height={48} alt="" priority />
         <div>
           <p className="az-eyebrow">Article Zero</p>
           <p className="az-brand-subtitle">Constitutional command center</p>
