@@ -1,7 +1,11 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  oxc: { jsx: "automatic" },
+  oxc: {
+  jsx: {
+    runtime: "automatic",
+  },
+},
   resolve: {
     alias: { "server-only": new URL("./tests/server-only.ts", import.meta.url).pathname },
   },
