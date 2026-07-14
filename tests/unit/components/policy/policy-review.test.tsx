@@ -71,7 +71,7 @@ it("shows a natural-language revision diff without applying it and disables acti
   render(<PolicyReview />);
 
   await user.clear(screen.getByLabelText("Natural-language correction"));
-  await user.type(screen.getByLabelText("Natural-language correction"), "Require verified identity and disclose only emergency fields.");
+  await user.paste("Require verified identity and disclose only emergency fields.");
   await user.click(screen.getByRole("button", { name: "Preview revision" }));
 
   expect(await screen.findByText("Revision preview · Deterministic fallback")).toBeTruthy();
