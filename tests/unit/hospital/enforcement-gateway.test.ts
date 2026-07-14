@@ -23,7 +23,9 @@ function tools(): HospitalToolGateway {
     verifyResponderCredentials: vi.fn(async () => ({ identityVerified: true, organizationVerified: true })),
     requestHumanApproval: vi.fn(async (request: ApprovalRequest) => request),
     triggerEmergencyAlert: vi.fn(async () => ({ alertId: "alert.test" })),
-    writeAuditEvent: vi.fn(async (_event: AuditEvent) => undefined),
+    writeAuditEvent: vi.fn(async (event: AuditEvent) => {
+      void event;
+    }),
   };
 }
 

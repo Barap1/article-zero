@@ -89,7 +89,10 @@ describe("GroqAiProvider", () => {
   });
 
   it("Given a successful planner response, When planning an action, Then sends strict JSON output without reasoning or patient records", async () => {
-    const sdkMock = vi.fn((_: GroqCompletionRequest) => completion(HERO_ATTACK_SCENARIO.fallbackAction));
+    const sdkMock = vi.fn((request: GroqCompletionRequest) => {
+      void request;
+      return completion(HERO_ATTACK_SCENARIO.fallbackAction);
+    });
     const provider = new GroqAiProvider({ complete: sdkMock }, providerOptions);
 
     const result = await provider.planAction({

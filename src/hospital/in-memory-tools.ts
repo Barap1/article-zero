@@ -30,10 +30,12 @@ export function createInMemoryHospitalTools(): HospitalToolGateway {
     async readPatientRecord(patientId) {
       return patient(patientId);
     },
-    async disclosePatientData(patientId, fields, _recipientId) {
+    async disclosePatientData(patientId, fields, recipientId) {
+      void recipientId;
       return projectPatientFields(patient(patientId), fields);
     },
-    async sendStaffMessage(recipientId, _message) {
+    async sendStaffMessage(recipientId, message) {
+      void message;
       return { messageId: `message.${recipientId}` };
     },
     async verifyResponderCredentials(actorId) {
@@ -43,7 +45,8 @@ export function createInMemoryHospitalTools(): HospitalToolGateway {
     async requestHumanApproval(request) {
       return request;
     },
-    async triggerEmergencyAlert(incidentId, _message) {
+    async triggerEmergencyAlert(incidentId, message) {
+      void message;
       return { alertId: `alert.${incidentId}` };
     },
     async writeAuditEvent(event) {

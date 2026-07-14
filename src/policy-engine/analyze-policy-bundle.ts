@@ -7,7 +7,7 @@ import {
   SEVERITIES,
   TOOL_NAMES,
 } from "../domain/catalogs";
-import type { PolicyBundle, PolicyCondition, PolicyIssue, PolicyRule } from "../domain/schemas";
+import type { PolicyBundle, PolicyIssue, PolicyRule } from "../domain/schemas";
 
 const severityOrder = { critical: 0, high: 1, warning: 2, informational: 3 } as const;
 
