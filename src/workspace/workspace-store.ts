@@ -2,7 +2,9 @@
 
 import { create } from "zustand";
 
-import type { CompileResult, RevisionResult, WorkspaceState } from "../domain/schemas";
+import type { CompilePreview, PolicyBundle, RevisionPreview, WorkspaceState } from "../domain/schemas";
+import { hashPolicyBundle } from "../policy-engine/hash-policy-bundle";
+import { createId } from "../lib/ids";
 import { createSeedWorkspace } from "./create-seed-workspace";
 import { LocalStorageWorkspaceRepository } from "./local-storage-repository";
 import type { WorkspaceRepository } from "./repository";
@@ -21,8 +23,10 @@ export type WorkspaceStore = {
   readonly setDemoStage: (stage: WorkspaceState["demoStage"]) => void;
   readonly selectClause: (clauseId: string) => void;
   readonly editClause: (clauseId: string, text: string) => void;
-  readonly applyCompileResult: (clauseId: string, result: CompileResult) => void;
-  readonly applyRevisedRules: (result: RevisionResult) => void;
+  readonly addClause: () => void;
+  readonly acceptCompilePreview: (clauseId: string, preview: CompilePreview) => Promise<void>;
+  readonly acceptRevisionPreview: (preview: RevisionPreview) => Promise<void>;
+  readonly acceptPolicyBundle: (bundle: PolicyBundle, changeSummary: string) => Promise<void>;
   readonly addAttackRun: (run: WorkspaceState["attackRuns"][number]) => void;
   readonly addTestRun: (run: WorkspaceState["testRuns"][number]) => void;
   readonly acknowledgeIssue: (issueId: string) => void;
@@ -100,8 +104,22 @@ export function createWorkspaceStore(options: CreateWorkspaceStoreOptions = {}) 
       },
       selectClause: (clauseId) => commit({ type: "SET_SELECTED_CLAUSE", clauseId }),
       editClause: (clauseId, text) => commit({ type: "EDIT_CLAUSE", clauseId, text }),
-      applyCompileResult: (clauseId, result) => commit({ type: "APPLY_COMPILE_RESULT", clauseId, result }),
-      applyRevisedRules: (result) => commit({ type: "APPLY_REVISED_RULES", result }),
+      addClause: () => {
+        const clauseId = `clause.${createId()}`;
+        commit({ type: "ADD_CLAUSE", clauseId });
+      },
+      acceptCompilePreview: async (clauseId, preview) => {
+        const bundleHash = await hashPolicyBundle(preview.proposedBundle);
+        commit({ type: "ACCEPT_COMPILE_PREVIEW", clauseId, preview, bundleHash });
+      },
+      acceptRevisionPreview: async (preview) => {
+        const bundleHash = await hashPolicyBundle(preview.proposedBundle);
+        commit({ type: "ACCEPT_REVISION_PREVIEW", preview, bundleHash });
+      },
+      acceptPolicyBundle: async (bundle, changeSummary) => {
+        const bundleHash = await hashPolicyBundle(bundle);
+        commit({ type: "ACCEPT_POLICY_BUNDLE", bundle, bundleHash, changeSummary });
+      },
       addAttackRun: (run) => commit({ type: "ADD_ATTACK_RUN", run }),
       addTestRun: (run) => commit({ type: "ADD_TEST_RUN", run }),
       acknowledgeIssue: (issueId) => commit({ type: "ACKNOWLEDGE_ISSUE", issueId }),

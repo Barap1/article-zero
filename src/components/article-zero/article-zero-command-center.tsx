@@ -10,6 +10,8 @@ import { AppHeader } from "./app-header";
 import { DemoBriefing } from "./demo-briefing";
 import { DEMO_STAGES, DemoStageRail } from "./demo-stage-rail";
 import { ResetDemoDialog } from "./reset-demo-dialog";
+import { ConstitutionWorkspace } from "./constitution/constitution-workspace";
+import { PolicyReview } from "./policy/policy-review";
 
 type StagePanel = { readonly title: string; readonly component: string; readonly description: string; readonly marker: string };
 
@@ -104,7 +106,7 @@ export function ArticleZeroCommandCenter() {
           <div className="az-sidebar-footer"><span className="az-sidebar-footer-label">Local workspace</span><span>Browser persistence on</span></div>
         </aside>
         <div className="az-main-surface">
-          {showBriefing ? <DemoBriefing onOpenConstitution={openConstitution} onRunGuidedDemo={openConstitution} /> : <StagePlaceholder stage={workspace.demoStage} />}
+          {showBriefing ? <DemoBriefing onOpenConstitution={openConstitution} onRunGuidedDemo={openConstitution} /> : workspace.demoStage === "CONSTITUTION" ? <><ConstitutionWorkspace /><PolicyReview /></> : <StagePlaceholder stage={workspace.demoStage} />}
         </div>
       </div>
       <ResetDemoDialog open={resetOpen} isResetting={isResetting} onCancel={() => setResetOpen(false)} onConfirm={() => { void handleReset(); }} />

@@ -1,4 +1,4 @@
-import type { CompileResult, ConstitutionClause, RevisionResult, WorkspaceState } from "../domain/schemas";
+import type { CompilePreview, ConstitutionClause, PolicyBundle, RevisionPreview, WorkspaceState } from "../domain/schemas";
 import type { ConstitutionVersion } from "../domain/schemas";
 import { createId, type IdFactory } from "../lib/ids";
 
@@ -6,8 +6,10 @@ export type ActivationTransition = { readonly workspace: WorkspaceState };
 
 export type WorkspaceAction =
   | { readonly type: "EDIT_CLAUSE"; readonly clauseId: string; readonly text: string }
-  | { readonly type: "APPLY_COMPILE_RESULT"; readonly clauseId: string; readonly result: CompileResult }
-  | { readonly type: "APPLY_REVISED_RULES"; readonly result: RevisionResult }
+  | { readonly type: "ADD_CLAUSE"; readonly clauseId: string }
+  | { readonly type: "ACCEPT_COMPILE_PREVIEW"; readonly clauseId: string; readonly preview: CompilePreview; readonly bundleHash: string }
+  | { readonly type: "ACCEPT_REVISION_PREVIEW"; readonly preview: RevisionPreview; readonly bundleHash: string }
+  | { readonly type: "ACCEPT_POLICY_BUNDLE"; readonly bundle: PolicyBundle; readonly bundleHash: string; readonly changeSummary: string }
   | { readonly type: "SET_SELECTED_CLAUSE"; readonly clauseId: string }
   | { readonly type: "SET_DEMO_STAGE"; readonly stage: WorkspaceState["demoStage"] }
   | { readonly type: "ADD_ATTACK_RUN"; readonly run: WorkspaceState["attackRuns"][number] }
@@ -39,10 +41,17 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction,
   switch (action.type) {
     case "EDIT_CLAUSE":
       return updateDraft(state, (draft) => updateClause(draft, action.clauseId, (clause) => ({ ...clause, text: action.text, source: "user", status: "dirty", lastCompiledText: null })), idFactory);
-    case "APPLY_COMPILE_RESULT":
-      return updateDraft(state, (draft) => ({ ...updateClause(draft, action.clauseId, (clause) => ({ ...clause, text: action.result.normalizedClause, status: "compiled", lastCompiledText: action.result.normalizedClause })), policyBundle: { ...draft.policyBundle, rules: [...draft.policyBundle.rules.filter((rule) => rule.sourceClauseId !== action.clauseId), ...action.result.rules] }, changeSummary: action.result.interpretationSummary }), idFactory);
-    case "APPLY_REVISED_RULES":
-      return updateDraft(state, (draft) => ({ ...draft, policyBundle: { ...draft.policyBundle, rules: [...draft.policyBundle.rules.filter((rule) => !action.result.sourceRuleIds.includes(rule.id)), ...action.result.revisedRules] }, changeSummary: action.result.changeSummary }), idFactory);
+    case "ADD_CLAUSE":
+      return updateDraft(state, (draft) => {
+        const articleNumber = Math.max(...draft.clauses.map((clause) => clause.articleNumber), 0) + 1;
+        return { ...draft, selectedClauseId: action.clauseId, clauses: [...draft.clauses, { id: action.clauseId, articleNumber, title: "New policy article", text: "", source: "user", status: "dirty", lastCompiledText: null }], };
+      }, idFactory);
+    case "ACCEPT_COMPILE_PREVIEW":
+      return updateDraft(state, (draft) => ({ ...updateClause(draft, action.clauseId, (clause) => ({ ...clause, text: action.preview.result.normalizedClause, status: "compiled", lastCompiledText: action.preview.result.normalizedClause })), policyBundle: action.preview.proposedBundle, bundleHash: action.bundleHash, activationTestRunId: null, changeSummary: action.preview.result.interpretationSummary }), idFactory);
+    case "ACCEPT_REVISION_PREVIEW":
+      return updateDraft(state, (draft) => ({ ...draft, policyBundle: action.preview.proposedBundle, bundleHash: action.bundleHash, activationTestRunId: null, changeSummary: action.preview.result.changeSummary }), idFactory);
+    case "ACCEPT_POLICY_BUNDLE":
+      return updateDraft(state, (draft) => ({ ...draft, policyBundle: action.bundle, bundleHash: action.bundleHash, activationTestRunId: null, changeSummary: action.changeSummary }), idFactory);
     case "SET_SELECTED_CLAUSE": return { ...state, selectedClauseId: action.clauseId };
     case "SET_DEMO_STAGE": return { ...state, demoStage: action.stage };
     case "ADD_ATTACK_RUN": return { ...state, attackRuns: [...state.attackRuns, action.run], selectedAttackRunId: action.run.id };
