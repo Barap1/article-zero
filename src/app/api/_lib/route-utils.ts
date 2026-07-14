@@ -65,7 +65,8 @@ export async function parseBody<T>(request: Request, schema: z.ZodType<T>): Prom
 
 export function enforceSameOrigin(request: Request): void {
   const origin = request.headers.get("origin")
-  if (origin !== null && origin !== new URL(request.url).origin) throw new RouteError("INVALID_REQUEST", "Cross-origin requests are not allowed.", false, 403)
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host")
+  if (origin !== null && host !== null && new URL(origin).host !== host) throw new RouteError("INVALID_REQUEST", "Cross-origin requests are not allowed.", false, 403)
 }
 
 export function enforceAiLimit(request: Request): void {

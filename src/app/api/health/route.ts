@@ -1,6 +1,6 @@
 import { readGroqConfiguration } from "../../../ai/groq-client"
 import { HealthDataSchema } from "../../../domain/api"
-import { failure, requestId, success } from "../_lib/route"
+import { failure, requestId, success } from "../_lib/route-utils"
 
 export function GET(): Response {
   const id = requestId(); const startedAt = Date.now()

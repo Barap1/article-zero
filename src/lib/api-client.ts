@@ -84,7 +84,7 @@ export class ApiClient {
 
   public constructor(options: ApiClientOptions = {}) {
     this.baseUrl = options.baseUrl ?? "";
-    this.fetcher = options.fetcher ?? fetch;
+    this.fetcher = options.fetcher ?? ((input, init) => fetch(input, init));
   }
 
   private async request<T>(path: string, init: RequestInit, schema: z.ZodType<T>): Promise<ApiSuccess<T>> {

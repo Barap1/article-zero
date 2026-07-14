@@ -12,6 +12,7 @@ import { DEMO_STAGES, DemoStageRail } from "./demo-stage-rail";
 import { ResetDemoDialog } from "./reset-demo-dialog";
 import { ConstitutionWorkspace } from "./constitution/constitution-workspace";
 import { PolicyReview } from "./policy/policy-review";
+import { AttackArena } from "./attack/attack-arena";
 
 type StagePanel = { readonly title: string; readonly component: string; readonly description: string; readonly marker: string };
 
@@ -64,6 +65,7 @@ export function ArticleZeroCommandCenter() {
   const setDemoStage = useWorkspaceStore((state) => state.setDemoStage);
   const resetDemo = useWorkspaceStore((state) => state.resetDemo);
   const exportAuditPackage = useWorkspaceStore((state) => state.exportAuditPackage);
+  const addAttackRun = useWorkspaceStore((state) => state.addAttackRun);
   const [resetOpen, setResetOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -97,6 +99,10 @@ export function ArticleZeroCommandCenter() {
     return <main className="az-shell az-shell-loading"><div className="az-loading-mark" aria-hidden="true" /><p role="status">Restoring the local workspace…</p></main>;
   }
 
+  const activeVersion = workspace.versions.find((version) => version.id === workspace.activeVersionId);
+  const selectedAttackRun = workspace.attackRuns.find((run) => run.id === workspace.selectedAttackRunId);
+  if (activeVersion === undefined) return <main className="az-shell az-shell-loading"><p role="alert">The active policy version is unavailable.</p></main>;
+
   return (
     <main className="az-shell">
       <AppHeader workspace={workspace} onReset={() => setResetOpen(true)} onExport={() => { void handleExport(); }} isExporting={isExporting} />
@@ -106,7 +112,7 @@ export function ArticleZeroCommandCenter() {
           <div className="az-sidebar-footer"><span className="az-sidebar-footer-label">Local workspace</span><span>Browser persistence on</span></div>
         </aside>
         <div className="az-main-surface">
-          {showBriefing ? <DemoBriefing onOpenConstitution={openConstitution} onRunGuidedDemo={openConstitution} /> : workspace.demoStage === "CONSTITUTION" ? <><ConstitutionWorkspace /><PolicyReview /></> : <StagePlaceholder stage={workspace.demoStage} />}
+          {showBriefing ? <DemoBriefing onOpenConstitution={openConstitution} onRunGuidedDemo={openConstitution} /> : workspace.demoStage === "CONSTITUTION" ? <><ConstitutionWorkspace /><PolicyReview /></> : workspace.demoStage === "ATTACK" || workspace.demoStage === "INCIDENT" ? <AttackArena key={workspace.demoStage} version={activeVersion} {...(workspace.demoStage === "INCIDENT" && selectedAttackRun !== undefined ? { initialRun: selectedAttackRun } : {})} onAddAttackRun={addAttackRun} onAdvanceToAmendment={() => setDemoStage("AMENDMENT")} /> : <StagePlaceholder stage={workspace.demoStage} />}
         </div>
       </div>
       <ResetDemoDialog open={resetOpen} isResetting={isResetting} onCancel={() => setResetOpen(false)} onConfirm={() => { void handleReset(); }} />

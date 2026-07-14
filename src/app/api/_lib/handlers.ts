@@ -9,7 +9,7 @@ import { ATTACK_SCENARIOS } from "../../../hospital/fixtures/scenarios"
 import { analyzePolicyBundle } from "../../../policy-engine/analyze-policy-bundle"
 import { diffPolicyRules } from "../../../policy-engine/policy-diff"
 import { TOOL_NAMES } from "../../../domain/catalogs"
-import { failure, enforceAiLimit, enforceSameOrigin, parseBody, providerSource, requestId, RouteError, success, type ProviderFactory } from "./route"
+import { failure, enforceAiLimit, enforceSameOrigin, parseBody, providerSource, requestId, RouteError, success, type ProviderFactory } from "./route-utils"
 
 type GatewayFactory = () => HospitalToolGateway
 
