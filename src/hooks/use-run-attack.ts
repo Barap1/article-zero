@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 
-import type { AttackScenario, PolicyBundle } from "../domain/schemas";
+import type { AttackScenario, AuditEvent, PolicyBundle } from "../domain/schemas";
 import { ApiClientError, apiClient } from "../lib/api-client";
 import type { AgentAction, PolicyDecision, ToolExecutionResult } from "../domain/schemas";
 import type { FrozenAttack } from "../red-team/freeze-replay";
@@ -20,6 +20,7 @@ export type AttackOperationResult = {
   readonly source: "groq" | "fallback" | "frozen_replay";
   readonly decision: PolicyDecision;
   readonly toolResult: ToolExecutionResult | null;
+  readonly auditEvents: readonly AuditEvent[];
 };
 
 function matchesScenarioAction(input: RunAttackInput, action: AgentAction): boolean {
@@ -41,18 +42,18 @@ export function useRunAttack() {
     if (input.frozen !== undefined) {
       if (input.frozen.scenarioId !== input.scenario.id) throw new Error("Frozen attack belongs to a different scenario.");
       const execution = await apiClient.execute({ action: input.frozen.action, context: input.scenario.evaluationContext, bundle: input.bundle });
-      return { action: execution.data.action, source: "frozen_replay", decision: execution.data.decision, toolResult: execution.data.toolResult };
+      return { action: execution.data.action, source: "frozen_replay", decision: execution.data.decision, toolResult: execution.data.toolResult, auditEvents: execution.data.auditEvents };
     }
     try {
       const plan = await apiClient.planAction({ scenarioId: input.scenario.id, requestText: input.requestText, actor: input.scenario.evaluationContext.actor, patientId: input.scenario.patientId });
       const action = matchesScenarioAction(input, plan.data) ? plan.data : fallbackAction(input);
       const execution = await apiClient.execute({ action, context: input.scenario.evaluationContext, bundle: input.bundle });
-      return { action: execution.data.action, source: action === plan.data && plan.meta.source === "groq" ? "groq" : "fallback", decision: execution.data.decision, toolResult: execution.data.toolResult };
+      return { action: execution.data.action, source: action === plan.data && plan.meta.source === "groq" ? "groq" : "fallback", decision: execution.data.decision, toolResult: execution.data.toolResult, auditEvents: execution.data.auditEvents };
     } catch (error) {
       if (!(error instanceof ApiClientError)) throw error;
       const action = fallbackAction(input);
       const execution = await apiClient.execute({ action, context: input.scenario.evaluationContext, bundle: input.bundle });
-      return { action: execution.data.action, source: "fallback", decision: execution.data.decision, toolResult: execution.data.toolResult };
+      return { action: execution.data.action, source: "fallback", decision: execution.data.decision, toolResult: execution.data.toolResult, auditEvents: execution.data.auditEvents };
     }
   }, []);
   return useOperation(operation);

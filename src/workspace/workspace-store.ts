@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 
-import type { CompilePreview, PolicyBundle, RevisionPreview, WorkspaceState } from "../domain/schemas";
+import type { AuditEvent, CompilePreview, PolicyBundle, RevisionPreview, WorkspaceState } from "../domain/schemas";
 import { hashPolicyBundle } from "../policy-engine/hash-policy-bundle";
 import { createId } from "../lib/ids";
 import { createSeedWorkspace } from "./create-seed-workspace";
@@ -28,6 +28,7 @@ export type WorkspaceStore = {
   readonly acceptRevisionPreview: (preview: RevisionPreview) => Promise<void>;
   readonly acceptPolicyBundle: (bundle: PolicyBundle, changeSummary: string) => Promise<void>;
   readonly addAttackRun: (run: WorkspaceState["attackRuns"][number]) => void;
+  readonly addAuditEvents: (events: readonly AuditEvent[]) => void;
   readonly addTestRun: (run: WorkspaceState["testRuns"][number]) => void;
   readonly acknowledgeIssue: (issueId: string) => void;
   readonly activateVersion: (result: ActivationTransition) => void;
@@ -121,6 +122,7 @@ export function createWorkspaceStore(options: CreateWorkspaceStoreOptions = {}) 
         commit({ type: "ACCEPT_POLICY_BUNDLE", bundle, bundleHash, changeSummary });
       },
       addAttackRun: (run) => commit({ type: "ADD_ATTACK_RUN", run }),
+      addAuditEvents: (events) => commit({ type: "ADD_AUDIT_EVENTS", events }),
       addTestRun: (run) => commit({ type: "ADD_TEST_RUN", run }),
       acknowledgeIssue: (issueId) => commit({ type: "ACKNOWLEDGE_ISSUE", issueId }),
       activateVersion: (result) => commit({ type: "ACTIVATE_VERSION", result }),

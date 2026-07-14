@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, RotateCcw, ShieldCheck } from "lucide-react";
+import { ClipboardList, Download, RotateCcw, ShieldCheck } from "lucide-react";
 
 import type { WorkspaceState } from "../../domain/schemas";
 import { ProviderStatusBadge } from "./provider-status-badge";
@@ -9,6 +9,7 @@ type AppHeaderProps = {
   readonly workspace: WorkspaceState;
   readonly onReset: () => void;
   readonly onExport: () => void;
+  readonly onOpenAudit: () => void;
   readonly isExporting: boolean;
 };
 
@@ -18,7 +19,7 @@ function providerSource(status: WorkspaceState["providerStatus"]): "deterministi
   return "deterministic";
 }
 
-export function AppHeader({ workspace, onReset, onExport, isExporting }: AppHeaderProps) {
+export function AppHeader({ workspace, onReset, onExport, onOpenAudit, isExporting }: AppHeaderProps) {
   const activeVersion = workspace.versions.find((version) => version.id === workspace.activeVersionId);
   const legacyRisk = activeVersion?.status === "LEGACY_UNSAFE_BASELINE";
 
@@ -40,6 +41,7 @@ export function AppHeader({ workspace, onReset, onExport, isExporting }: AppHead
         <ProviderStatusBadge source={providerSource(workspace.providerStatus)} />
         <span className="az-synthetic-context"><span className="az-status-dot az-status-dot-synthetic" aria-hidden="true" />Synthetic data only</span>
         <div className="az-header-actions">
+          <button className="az-button az-button-quiet" type="button" onClick={onOpenAudit}><ClipboardList size={15} aria-hidden="true" />Audit timeline</button>
           <button className="az-button az-button-quiet" type="button" onClick={onExport} disabled={isExporting}>
             <Download size={15} aria-hidden="true" />
             {isExporting ? "Preparing…" : "Export audit"}

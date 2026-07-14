@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 
-import type { AttackRun, ConstitutionVersion } from "../../../domain/schemas";
+import type { AttackRun, AuditEvent, ConstitutionVersion } from "../../../domain/schemas";
 import { HERO_ATTACK_SCENARIO } from "../../../hospital/fixtures/scenarios";
 import { useRunAttack } from "../../../hooks/use-run-attack";
 import { apiClient } from "../../../lib/api-client";
@@ -16,11 +16,12 @@ import { IncidentDetails, ProposalCard, SourceBadge } from "./attack-details";
 type AttackArenaProps = {
   readonly version: ConstitutionVersion;
   readonly onAddAttackRun: (run: AttackRun) => void;
+  readonly onAddAuditEvents?: (events: readonly AuditEvent[]) => void;
   readonly onAdvanceToAmendment: () => void;
   readonly initialRun?: AttackRun;
 };
 
-export function AttackArena({ version, onAddAttackRun, onAdvanceToAmendment, initialRun }: AttackArenaProps) {
+export function AttackArena({ version, onAddAttackRun, onAddAuditEvents = () => undefined, onAdvanceToAmendment, initialRun }: AttackArenaProps) {
   const [requestText, setRequestText] = useState(initialRun?.requestText ?? HERO_ATTACK_SCENARIO.requestText);
   const [run, setRun] = useState<AttackRun | undefined>(initialRun);
   const [frozenRun, setFrozenRun] = useState<AttackRun | undefined>(initialRun);
@@ -33,7 +34,7 @@ export function AttackArena({ version, onAddAttackRun, onAdvanceToAmendment, ini
   const persistRun = (result: NonNullable<Awaited<ReturnType<typeof attack.submit>>>): AttackRun => {
     const completedAt = new Date().toISOString();
     const nextRun: AttackRun = { id: `attack.${createId()}`, scenarioId: HERO_ATTACK_SCENARIO.id, constitutionVersionId: version.id, startedAt: completedAt, completedAt, requestText: result.source === "frozen_replay" ? result.action.sourceRequest : requestText, action: result.action, actionSource: result.source, decision: result.decision, toolResult: result.toolResult };
-    setRun(nextRun); setHighlightedRuleIds(nextRun.decision.appliedRuleIds); onAddAttackRun(nextRun);
+    setRun(nextRun); setHighlightedRuleIds(nextRun.decision.appliedRuleIds); onAddAttackRun(nextRun); onAddAuditEvents(result.auditEvents ?? []);
     return nextRun;
   };
 

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { MINIMUM_EMERGENCY_FIELDS } from "../domain/catalogs";
+import { BREAK_GLASS_EMERGENCY_FIELDS, MINIMUM_EMERGENCY_FIELDS } from "../domain/catalogs";
 import { PolicyRuleSchema } from "../domain/schemas";
 import { ATTACK_SCENARIOS } from "../hospital/fixtures/scenarios";
 import { ProviderError } from "./errors";
@@ -45,8 +45,60 @@ const correctedRule = PolicyRuleSchema.parse({
   effect: "ALLOW_WITH_FIELD_FILTER",
   allowedFields: [...MINIMUM_EMERGENCY_FIELDS],
   onIndeterminate: "REQUIRE_HUMAN_APPROVAL",
-  overridesRuleIds: ["rule.privacy.default-deny"],
+  overridesRuleIds: [],
   severity: "critical",
+  enabled: true,
+});
+
+const approvedBreakGlassRule = PolicyRuleSchema.parse({
+  id: "rule.emergency.approved-break-glass-disclosure",
+  sourceClauseId: "clause.emergency-response",
+  name: "Privacy-officer approved break-glass disclosure",
+  description: "A verified-dispatch emergency with unavailable responder credentials may disclose minimum fields after privacy-officer approval.",
+  priority: 92,
+  appliesToTools: ["disclose_patient_data"],
+  conditionMode: "ALL",
+  conditions: [
+    { id: "condition.approved.role", fact: "actor.role", operator: "EQUALS", value: "emergency_responder", label: "Actor role is emergency responder" },
+    { id: "condition.approved.credible", fact: "emergency.credible", operator: "EQUALS", value: true, label: "Emergency evidence is credible" },
+    { id: "condition.approved.imminent", fact: "emergency.imminent", operator: "EQUALS", value: true, label: "Threat is imminent" },
+    { id: "condition.approved.life", fact: "emergency.threatToLife", operator: "EQUALS", value: true, label: "Threat concerns human life" },
+    { id: "condition.approved.identity", fact: "actor.identityVerified", operator: "EQUALS", value: null, label: "Responder credential verification is unavailable" },
+    { id: "condition.approved.evidence", fact: "emergency.evidenceSource", operator: "IN", value: ["verified_dispatch", "hospital_system"], label: "Emergency evidence comes from a trusted system" },
+    { id: "condition.approved.purpose", fact: "request.purpose", operator: "EQUALS", value: "privacy_review", label: "Request is a privacy-officer review" },
+    { id: "condition.approved.status", fact: "approval.status", operator: "EQUALS", value: "approved", label: "Privacy-officer approval is recorded" },
+    { id: "condition.approved.approver", fact: "approval.approverRole", operator: "EQUALS", value: "privacy_officer", label: "Approval came from a privacy officer" },
+  ],
+  effect: "ALLOW_WITH_FIELD_FILTER",
+  allowedFields: [...BREAK_GLASS_EMERGENCY_FIELDS],
+  onIndeterminate: "REQUIRE_HUMAN_APPROVAL",
+  overridesRuleIds: ["rule.emergency.verified-minimum-disclosure"],
+  severity: "high",
+  enabled: true,
+});
+
+const trustedBreakGlassRule = PolicyRuleSchema.parse({
+  id: "rule.emergency.trusted-credential-outage-disclosure",
+  sourceClauseId: "clause.emergency-response",
+  name: "Trusted credential-outage break-glass disclosure",
+  description: "A verified-dispatch emergency with unavailable credentials permits only narrow stabilization fields.",
+  priority: 91,
+  appliesToTools: ["disclose_patient_data"],
+  conditionMode: "ALL",
+  conditions: [
+    { id: "condition.outage.role", fact: "actor.role", operator: "EQUALS", value: "emergency_responder", label: "Actor role is emergency responder" },
+    { id: "condition.outage.credible", fact: "emergency.credible", operator: "EQUALS", value: true, label: "Emergency evidence is credible" },
+    { id: "condition.outage.imminent", fact: "emergency.imminent", operator: "EQUALS", value: true, label: "Threat is imminent" },
+    { id: "condition.outage.life", fact: "emergency.threatToLife", operator: "EQUALS", value: true, label: "Threat concerns human life" },
+    { id: "condition.outage.identity", fact: "actor.identityVerified", operator: "EQUALS", value: null, label: "Responder credential verification is unavailable" },
+    { id: "condition.outage.evidence", fact: "emergency.evidenceSource", operator: "IN", value: ["verified_dispatch", "hospital_system"], label: "Emergency evidence comes from a trusted system" },
+    { id: "condition.outage.purpose", fact: "request.purpose", operator: "EQUALS", value: "emergency_response", label: "Request supports emergency response" },
+  ],
+  effect: "ALLOW_WITH_FIELD_FILTER",
+  allowedFields: [...BREAK_GLASS_EMERGENCY_FIELDS],
+  onIndeterminate: "REQUIRE_HUMAN_APPROVAL",
+  overridesRuleIds: ["rule.emergency.verified-minimum-disclosure"],
+  severity: "high",
   enabled: true,
 });
 
@@ -70,7 +122,7 @@ export class FallbackAiProvider implements AiProvider {
       return fallbackResult(`fallback.compile.${input.clause.id}`, { sourceClauseId: input.clause.id, normalizedClause, interpretationSummary: "Legacy emergency override compiled for deterministic demonstration.", rules: [vulnerableRule], ambiguities: [], assumptions: [] });
     }
     if (heroAmendment(input.clause.text)) {
-      return fallbackResult(`fallback.compile.${input.clause.id}`, { sourceClauseId: input.clause.id, normalizedClause, interpretationSummary: "Verified minimum emergency disclosure compiled for deterministic demonstration.", rules: [correctedRule], ambiguities: [], assumptions: [] });
+      return fallbackResult(`fallback.compile.${input.clause.id}`, { sourceClauseId: input.clause.id, normalizedClause, interpretationSummary: "Verified minimum emergency disclosure compiled for deterministic demonstration.", rules: [correctedRule, trustedBreakGlassRule, approvedBreakGlassRule], ambiguities: [], assumptions: [] });
     }
     throw new ProviderError("PROVIDER_INVALID_OUTPUT", "No deterministic compiler fallback exists for this clause.", false);
   }

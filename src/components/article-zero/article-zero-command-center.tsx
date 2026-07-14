@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react";
 
 import type { WorkspaceState } from "../../domain/schemas";
+import { analyzePolicyBundle } from "../../policy-engine/analyze-policy-bundle";
+import { useActivateConstitution } from "../../hooks/use-activate-constitution";
 import { useDemoKeyboardShortcuts } from "../../hooks/use-demo-keyboard-shortcuts";
 import { useProviderHealth } from "../../hooks/use-provider-health";
+import { useRunRegressionSuite } from "../../hooks/use-run-regression-suite";
 import { useWorkspaceStore } from "../../workspace/workspace-store";
 import { AppHeader } from "./app-header";
 import { DemoBriefing } from "./demo-briefing";
@@ -13,6 +16,11 @@ import { ResetDemoDialog } from "./reset-demo-dialog";
 import { ConstitutionWorkspace } from "./constitution/constitution-workspace";
 import { PolicyReview } from "./policy/policy-review";
 import { AttackArena } from "./attack/attack-arena";
+import { ActivationPanel } from "./activation/activation-panel";
+import { ReplayComparison } from "./activation/replay-comparison";
+import { AuditDrawer } from "./audit-drawer";
+
+const HERO_AMENDMENT = "During a credible and imminent threat to life, disclose only the minimum necessary emergency information to a verified emergency responder. If required facts cannot be verified, request approval from a hospital privacy officer; otherwise deny access.";
 
 type StagePanel = { readonly title: string; readonly component: string; readonly description: string; readonly marker: string };
 
@@ -66,7 +74,14 @@ export function ArticleZeroCommandCenter() {
   const resetDemo = useWorkspaceStore((state) => state.resetDemo);
   const exportAuditPackage = useWorkspaceStore((state) => state.exportAuditPackage);
   const addAttackRun = useWorkspaceStore((state) => state.addAttackRun);
+  const addAuditEvents = useWorkspaceStore((state) => state.addAuditEvents);
+  const acknowledgeIssue = useWorkspaceStore((state) => state.acknowledgeIssue);
+  const runRegression = useRunRegressionSuite();
+  const activateConstitution = useActivateConstitution();
+  const editClause = useWorkspaceStore((state) => state.editClause);
+  const selectClause = useWorkspaceStore((state) => state.selectClause);
   const [resetOpen, setResetOpen] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -105,17 +120,23 @@ export function ArticleZeroCommandCenter() {
 
   return (
     <main className="az-shell">
-      <AppHeader workspace={workspace} onReset={() => setResetOpen(true)} onExport={() => { void handleExport(); }} isExporting={isExporting} />
+      <AppHeader workspace={workspace} onReset={() => setResetOpen(true)} onExport={() => { void handleExport(); }} onOpenAudit={() => setAuditOpen(true)} isExporting={isExporting} />
       <div className="az-command-layout">
         <aside className="az-sidebar">
           <DemoStageRail activeStage={workspace.demoStage} onStageChange={setDemoStage} />
           <div className="az-sidebar-footer"><span className="az-sidebar-footer-label">Local workspace</span><span>Browser persistence on</span></div>
         </aside>
         <div className="az-main-surface">
-          {showBriefing ? <DemoBriefing onOpenConstitution={openConstitution} onRunGuidedDemo={openConstitution} /> : workspace.demoStage === "CONSTITUTION" ? <><ConstitutionWorkspace /><PolicyReview /></> : workspace.demoStage === "ATTACK" || workspace.demoStage === "INCIDENT" ? <AttackArena key={workspace.demoStage} version={activeVersion} {...(workspace.demoStage === "INCIDENT" && selectedAttackRun !== undefined ? { initialRun: selectedAttackRun } : {})} onAddAttackRun={addAttackRun} onAdvanceToAmendment={() => setDemoStage("AMENDMENT")} /> : <StagePlaceholder stage={workspace.demoStage} />}
+          {showBriefing ? <DemoBriefing onOpenConstitution={openConstitution} onRunGuidedDemo={openConstitution} /> : workspace.demoStage === "CONSTITUTION" || workspace.demoStage === "AMENDMENT" ? <><ConstitutionWorkspace /><PolicyReview /></> : workspace.demoStage === "ATTACK" || workspace.demoStage === "INCIDENT" ? <AttackArena key={workspace.demoStage} version={activeVersion} {...(workspace.demoStage === "INCIDENT" && selectedAttackRun !== undefined ? { initialRun: selectedAttackRun } : {})} onAddAttackRun={addAttackRun} onAddAuditEvents={addAuditEvents} onAdvanceToAmendment={() => { editClause("clause.emergency-response", HERO_AMENDMENT); selectClause("clause.emergency-response"); setDemoStage("AMENDMENT"); }} /> : workspace.demoStage === "TESTING" ? (() => {
+            const draft = workspace.versions.find((version) => version.id === workspace.draftVersionId);
+            if (draft === undefined) return <StagePlaceholder stage="TESTING" />;
+            const issues = analyzePolicyBundle(draft.policyBundle);
+            return <ActivationPanel draft={draft} workspace={workspace} issues={issues} onRun={async (version) => { await runRegression.submit(version); }} onActivate={async () => { const result = await activateConstitution.submit({ workspace, draftVersionId: draft.id, issues }); if (result !== null) setDemoStage("REPLAY"); }} onAcknowledge={acknowledgeIssue} />;
+          })() : workspace.demoStage === "REPLAY" ? <ReplayComparison activeVersion={activeVersion} legacyAttack={workspace.attackRuns.find((run) => run.scenarioId === "scenario.fake-responder-full-record" && run.constitutionVersionId !== activeVersion.id)} onAddAttackRun={addAttackRun} onAddAuditEvents={addAuditEvents} onComplete={() => setDemoStage("COMPLETE")} /> : <StagePlaceholder stage={workspace.demoStage} />}
         </div>
       </div>
       <ResetDemoDialog open={resetOpen} isResetting={isResetting} onCancel={() => setResetOpen(false)} onConfirm={() => { void handleReset(); }} />
+      {auditOpen ? <AuditDrawer events={workspace.auditEvents} onClose={() => setAuditOpen(false)} onExport={() => { void handleExport(); }} /> : null}
     </main>
   );
 }

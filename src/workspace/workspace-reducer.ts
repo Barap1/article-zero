@@ -1,4 +1,4 @@
-import type { CompilePreview, ConstitutionClause, PolicyBundle, RevisionPreview, WorkspaceState } from "../domain/schemas";
+import type { AuditEvent, CompilePreview, ConstitutionClause, PolicyBundle, RevisionPreview, WorkspaceState } from "../domain/schemas";
 import type { ConstitutionVersion } from "../domain/schemas";
 import { createId, type IdFactory } from "../lib/ids";
 
@@ -13,6 +13,7 @@ export type WorkspaceAction =
   | { readonly type: "SET_SELECTED_CLAUSE"; readonly clauseId: string }
   | { readonly type: "SET_DEMO_STAGE"; readonly stage: WorkspaceState["demoStage"] }
   | { readonly type: "ADD_ATTACK_RUN"; readonly run: WorkspaceState["attackRuns"][number] }
+  | { readonly type: "ADD_AUDIT_EVENTS"; readonly events: readonly AuditEvent[] }
   | { readonly type: "ADD_TEST_RUN"; readonly run: WorkspaceState["testRuns"][number] }
   | { readonly type: "ACKNOWLEDGE_ISSUE"; readonly issueId: string }
   | { readonly type: "ACTIVATE_VERSION"; readonly result: ActivationTransition }
@@ -55,6 +56,10 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction,
     case "SET_SELECTED_CLAUSE": return { ...state, selectedClauseId: action.clauseId };
     case "SET_DEMO_STAGE": return { ...state, demoStage: action.stage };
     case "ADD_ATTACK_RUN": return { ...state, attackRuns: [...state.attackRuns, action.run], selectedAttackRunId: action.run.id };
+    case "ADD_AUDIT_EVENTS": {
+      const existingIds = new Set(state.auditEvents.map((event) => event.id));
+      return { ...state, auditEvents: [...state.auditEvents, ...action.events.filter((event) => !existingIds.has(event.id))] };
+    }
     case "ADD_TEST_RUN": return { ...state, testRuns: [...state.testRuns, action.run], selectedTestRunId: action.run.id };
     case "ACKNOWLEDGE_ISSUE": return updateDraft(state, (draft) => ({ ...draft, acknowledgedIssueIds: draft.acknowledgedIssueIds.includes(action.issueId) ? draft.acknowledgedIssueIds : [...draft.acknowledgedIssueIds, action.issueId] }), idFactory);
     case "ACTIVATE_VERSION": return structuredClone(action.result.workspace);

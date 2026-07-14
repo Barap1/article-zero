@@ -5,8 +5,14 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env["CI"]),
   reporter: "html",
+  webServer: {
+    command: "pnpm exec next dev --port 3001",
+    url: "http://localhost:3001",
+    reuseExistingServer: false,
+    env: { ...process.env, GROQ_API_KEY: "", DEMO_FALLBACKS_ENABLED: "true" },
+  },
   use: {
-    baseURL: "http://127.0.0.1:3000",
+    baseURL: "http://localhost:3001",
     trace: "on-first-retry",
   },
   projects: [

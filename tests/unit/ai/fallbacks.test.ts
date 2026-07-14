@@ -6,6 +6,7 @@ vi.mock("server-only", () => ({}));
 import { FallbackAiProvider } from "../../../src/ai/fallback-provider";
 import { LEGACY_POLICY_BUNDLE, SEED_CLAUSES } from "../../../src/hospital/fixtures/constitution";
 import { HERO_ATTACK_SCENARIO } from "../../../src/hospital/fixtures/scenarios";
+import { analyzePolicyBundle } from "../../../src/policy-engine/analyze-policy-bundle";
 
 describe("FallbackAiProvider", () => {
   it("Given the legacy seed clause, When compiled, Then returns the exact vulnerable specification rule with fallback metadata", async () => {
@@ -37,6 +38,7 @@ describe("FallbackAiProvider", () => {
       onIndeterminate: "REQUIRE_HUMAN_APPROVAL",
       allowedFields: ["fullName", "bloodType", "criticalAllergies", "currentEmergencyMedications", "emergencyWarningFlags"],
     });
+    expect(analyzePolicyBundle({ ...LEGACY_POLICY_BUNDLE, rules: result.data.rules })).toEqual([]);
   });
 
   it("Given the hero attack, When planned, Then returns the scenario fallback action exactly", async () => {
