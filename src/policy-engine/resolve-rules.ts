@@ -50,7 +50,7 @@ function defaultEffect(action: AgentAction, bundle: PolicyBundle): { readonly ef
 
 function evaluateRuleCondition(ruleId: string, condition: PolicyCondition, action: AgentAction, context: EvaluationContext): ConditionResult {
   const actual = resolveFact(condition.fact, action, context);
-  if (condition.operator === "EQUALS" && condition.value === null && actual !== null) {
+  if (condition.operator === "EQUALS" && condition.value === null) {
     return {
       ruleId,
       conditionId: condition.id,
@@ -58,8 +58,8 @@ function evaluateRuleCondition(ruleId: string, condition: PolicyCondition, actio
       operator: condition.operator,
       expected: condition.value,
       actual,
-      result: "FALSE",
-      explanation: `${condition.label}: actual ${JSON.stringify(actual)}, expected null, result FALSE`,
+      result: actual === null ? "TRUE" : "FALSE",
+      explanation: `${condition.label}: actual ${JSON.stringify(actual)}, expected null, result ${actual === null ? "TRUE" : "FALSE"}`,
     };
   }
 
