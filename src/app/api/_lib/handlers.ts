@@ -1,4 +1,8 @@
 import { createAiProvider } from "../../../ai"
+import { ExecuteRequestSchema, EvaluateRequestSchema } from "../../../domain/api"
+import { evaluatePolicy } from "../../../policy-engine/evaluate-policy"
+import { executeEnforcedAction } from "../../../hospital/enforcement-gateway"
+import { createInMemoryHospitalTools, type HospitalToolGateway } from "../../../hospital/in-memory-tools"
 import { AgentActionSchema, AttackVariationDataSchema, AttackVariationRequestSchema, CompilePreviewSchema, CompileRequestSchema, PlanActionRequestSchema, RevisionRequestSchema, RevisionPreviewSchema } from "../../../domain/api"
 import { PolicyBundleSchema, RevisionResultSchema } from "../../../domain/schemas"
 import { ATTACK_SCENARIOS } from "../../../hospital/fixtures/scenarios"
@@ -6,6 +10,32 @@ import { analyzePolicyBundle } from "../../../policy-engine/analyze-policy-bundl
 import { diffPolicyRules } from "../../../policy-engine/policy-diff"
 import { TOOL_NAMES } from "../../../domain/catalogs"
 import { failure, enforceAiLimit, enforceSameOrigin, parseBody, providerSource, requestId, RouteError, success, type ProviderFactory } from "./route"
+
+type GatewayFactory = () => HospitalToolGateway
+
+export function createEvaluatePostHandler(): (request: Request) => Promise<Response> {
+  return async (request) => {
+    const id = requestId(); const startedAt = Date.now()
+    try {
+      enforceSameOrigin(request)
+      const input = await parseBody(request, EvaluateRequestSchema)
+      const decision = evaluatePolicy({ ...input, now: new Date().toISOString(), decisionId: id })
+      return success(id, startedAt, "deterministic", decision)
+    } catch (error) { return failure(id, error) }
+  }
+}
+
+export function createExecutePostHandler(gatewayFactory: GatewayFactory = createInMemoryHospitalTools): (request: Request) => Promise<Response> {
+  return async (request) => {
+    const id = requestId(); const startedAt = Date.now()
+    try {
+      enforceSameOrigin(request)
+      const input = await parseBody(request, ExecuteRequestSchema)
+      const result = await executeEnforcedAction({ ...input, gateway: gatewayFactory(), now: () => new Date(), idFactory: requestId })
+      return success(id, startedAt, "deterministic", result)
+    } catch (error) { return failure(id, error) }
+  }
+}
 
 export function createCompilePostHandler(providerFactory: ProviderFactory = createAiProvider): (request: Request) => Promise<Response> {
   return async (request) => {

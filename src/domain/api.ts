@@ -5,6 +5,7 @@ import {
   AgentActionSchema,
   CompilePreviewSchema,
   ConstitutionClauseSchema,
+  EvaluationContextSchema,
   PolicyBundleSchema,
   PolicyRuleSchema,
   RevisionPreviewSchema,
@@ -49,6 +50,8 @@ export const PlanActionRequestSchema = z.strictObject({
   patientId: z.string(),
 })
 export const AttackVariationRequestSchema = z.strictObject({ scenarioId: z.string(), variationSeed: z.number().int() })
+export const EvaluateRequestSchema = z.strictObject({ action: AgentActionSchema, context: EvaluationContextSchema, bundle: PolicyBundleSchema })
+export const ExecuteRequestSchema = z.strictObject({ action: AgentActionSchema, context: EvaluationContextSchema, bundle: PolicyBundleSchema })
 export const HealthDataSchema = z.strictObject({
   status: z.enum(["ok", "degraded"]),
   groqConfigured: z.boolean(),
