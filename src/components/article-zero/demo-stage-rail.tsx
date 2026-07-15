@@ -4,19 +4,10 @@ import { Check, Circle } from "lucide-react";
 
 import type { WorkspaceState } from "../../domain/schemas";
 import { cn } from "../../lib/cn";
+import { formatDisplayLabel } from "../../lib/display-label";
 import { getWorkflowAvailability, WORKFLOW_STAGES } from "../../workspace/workflow-availability";
 
 export const DEMO_STAGES = WORKFLOW_STAGES;
-
-const STAGE_LABELS: Record<WorkspaceState["demoStage"], string> = {
-  CONSTITUTION: "Constitution",
-  ATTACK: "Attack",
-  INCIDENT: "Incident",
-  AMENDMENT: "Amendment",
-  TESTING: "Testing",
-  REPLAY: "Replay",
-  COMPLETE: "Complete",
-};
 
 type DemoStageRailProps = {
   readonly activeStage: WorkspaceState["demoStage"];
@@ -72,7 +63,7 @@ export function DemoStageRail({ activeStage, workspace, onStageChange }: DemoSta
               }}
             >
               <span className="az-stage-mark" aria-hidden="true">{stageState.complete ? <Check size={14} /> : <Circle size={12} />}</span>
-              <span><span>{STAGE_LABELS[stage]}</span>{stageState.reason ? <small className="az-stage-reason">{stageState.reason}</small> : null}</span>
+              <span><span>{formatDisplayLabel(stage)}</span>{stageState.reason ? <small className="az-stage-reason">{stageState.reason}</small> : null}</span>
               {selected && <span className="az-stage-current">Current</span>}
             </button>
           );

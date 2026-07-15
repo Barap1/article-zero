@@ -5,20 +5,8 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { MINIMUM_EMERGENCY_FIELDS } from "../../../domain/catalogs";
 import type { PatientField } from "../../../domain/catalogs";
 import type { AgentAction, AttackRun, PolicyIssue } from "../../../domain/schemas";
+import { formatDisplayLabel } from "../../../lib/display-label";
 
-const FIELD_LABELS: Record<PatientField, string> = {
-  fullName: "Patient name",
-  dateOfBirth: "Date of birth",
-  bloodType: "Blood type",
-  criticalAllergies: "Critical allergies",
-  currentEmergencyMedications: "Emergency medications",
-  emergencyWarningFlags: "Emergency warning flags",
-  diagnoses: "Diagnoses",
-  homeAddress: "Home address",
-  insuranceInformation: "Insurance information",
-  emergencyContacts: "Emergency contacts",
-  clinicalNotes: "Clinical notes",
-};
 const EMERGENCY_FIELDS = new Set<PatientField>(MINIMUM_EMERGENCY_FIELDS);
 
 type ProposalCardProps = { readonly action: AgentAction; readonly source: AttackRun["actionSource"] };
@@ -31,7 +19,7 @@ type IncidentDetailsProps = {
 };
 
 export function SourceBadge({ source }: { readonly source: AttackRun["actionSource"] }) {
-  const label = source === "groq" ? "Live Groq proposal" : source === "fallback" ? "Limited sample fallback" : "Frozen replay";
+  const label = source === "groq" ? `${formatDisplayLabel("live")} ${formatDisplayLabel("groq")} proposal` : source === "fallback" ? `Limited ${formatDisplayLabel("fallback").toLowerCase()}` : formatDisplayLabel(source);
   return <span className="az-source-badge" aria-label={`Action source: ${label}`}>{label}</span>;
 }
 
@@ -40,7 +28,7 @@ export function ProposalCard({ action, source }: ProposalCardProps) {
     <div className="az-section-heading"><div><p className="az-eyebrow">Step 2 Agent proposal</p><h2 id="agent-proposal-title">Agent proposal</h2></div><SourceBadge source={source} /></div>
     <p>{action.proposalSummary}</p>
     <dl className="az-typed-action">
-      <div><dt>Tool</dt><dd>{action.tool}</dd></div><div><dt>Purpose</dt><dd>{action.purpose.replaceAll("_", " ")}</dd></div><div><dt>Requested fields</dt><dd>{action.requestedFields.length}</dd></div>
+      <div><dt>Tool</dt><dd>{formatDisplayLabel(action.tool)}</dd></div><div><dt>Purpose</dt><dd>{formatDisplayLabel(action.purpose)}</dd></div><div><dt>Requested fields</dt><dd>{action.requestedFields.length}</dd></div>
     </dl>
   </section>;
 }
@@ -54,7 +42,7 @@ function rootCauses(run: AttackRun, issues: readonly PolicyIssue[]): readonly st
 }
 
 function FieldList({ fields }: { readonly fields: readonly PatientField[] }) {
-  return <ul className="az-field-list">{fields.length === 0 ? <li>None</li> : fields.map((field) => <li key={field}>{FIELD_LABELS[field]}</li>)}</ul>;
+  return <ul className="az-field-list">{fields.length === 0 ? <li>None</li> : fields.map((field) => <li key={field}>{formatDisplayLabel(field)}</li>)}</ul>;
 }
 
 export function IncidentDetails({ run, issues, highlightedRuleIds, onHighlightRules, onAmend }: IncidentDetailsProps) {
@@ -66,12 +54,10 @@ export function IncidentDetails({ run, issues, highlightedRuleIds, onHighlightRu
   const transition = reduceMotion ? { duration: 0 } : { duration: 0.24, ease: "easeOut" as const };
 
   return <AnimatePresence mode="wait"><motion.section key={isBreach ? "breach" : "denial"} className={isBreach ? "az-incident az-incident-breach" : "az-incident az-incident-denial"} role={isBreach ? "alert" : "status"} aria-live="polite" aria-labelledby="incident-result-title" initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} transition={transition}>
-    <p className="az-eyebrow">Step 4 Enforced result · simulated hospital-tool result</p><h2 id="incident-result-title">{isBreach ? "Policy breach" : "Disclosure prevented"}</h2><p>{isBreach ? "The enforced result disclosed more than the emergency minimum to an unverified requester." : run.decision.humanExplanation}</p>
+    <p className="az-eyebrow">Enforced result · simulated hospital-tool result</p><h2 id="incident-result-title">{isBreach ? "Policy breach" : "Disclosure prevented"}</h2><p>{isBreach ? "The enforced result disclosed more than the emergency minimum to an unverified requester." : run.decision.humanExplanation}</p>
+    <div className="az-incident-primary-action"><button type="button" className="az-button az-button-primary" onClick={onAmend}>Create amendment</button></div>
     <section className="az-field-comparison" aria-labelledby="field-comparison-title"><h3 id="field-comparison-title">Requested, disclosed, and withheld fields</h3><div><section><h4>Requested</h4><FieldList fields={run.decision.requestedFields} /></section><section><h4>Disclosed</h4><FieldList fields={run.toolResult?.exposedPatientFields ?? []} /></section><section><h4>Withheld</h4><FieldList fields={run.decision.deniedFields} /></section></div></section>
-    <div className="az-disclosure-grid"><section><h3>Emergency-relevant disclosure</h3><FieldList fields={emergencyFields} /></section><section><h3>Excessive private disclosure</h3><FieldList fields={excessiveFields} /></section></div>
-    <section className="az-root-causes" aria-labelledby="root-cause-title"><h3 id="root-cause-title">Root causes</h3>{causes.length > 0 ? <ul>{causes.map((cause) => <li key={cause}>{cause}</li>)}</ul> : <p>No policy defect was detected for this run.</p>}</section>
-    <TraceTimeline run={run} highlightedRuleIds={highlightedRuleIds} onHighlightRules={onHighlightRules} />
-    <button type="button" className="az-button az-button-primary" onClick={onAmend}>Create amendment</button>
+    <details className="az-incident-decision-details" open><summary>Decision detail</summary><div className="az-disclosure-grid"><section><h3>Emergency-relevant disclosure</h3><FieldList fields={emergencyFields} /></section><section><h3>Excessive private disclosure</h3><FieldList fields={excessiveFields} /></section></div><section className="az-root-causes" aria-labelledby="root-cause-title"><h3 id="root-cause-title">Root causes</h3>{causes.length > 0 ? <ul>{causes.map((cause) => <li key={cause}>{cause}</li>)}</ul> : <p>No policy defect was detected for this run.</p>}</section><TraceTimeline run={run} highlightedRuleIds={highlightedRuleIds} onHighlightRules={onHighlightRules} /></details>
   </motion.section></AnimatePresence>;
 }
 

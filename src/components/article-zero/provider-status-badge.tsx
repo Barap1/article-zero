@@ -2,16 +2,17 @@
 
 import type { WorkspaceState } from "../../domain/schemas";
 import { cn } from "../../lib/cn";
+import { formatDisplayLabel } from "../../lib/display-label";
 
 type ProviderStatusBadgeProps = {
   readonly source: WorkspaceState["providerStatus"];
 };
 
 const LABELS = {
-  unknown: "Provider status unknown",
-  configured: "Groq configured",
-  live: "Live Groq",
-  fallback: "Limited sample fallback",
+  unknown: `Provider status ${formatDisplayLabel("unknown").toLowerCase()}`,
+  configured: `${formatDisplayLabel("groq")} configured`,
+  live: `${formatDisplayLabel("live")} ${formatDisplayLabel("groq")}`,
+  fallback: `Limited ${formatDisplayLabel("fallback").toLowerCase()}`,
   error: "Provider error",
 } as const;
 

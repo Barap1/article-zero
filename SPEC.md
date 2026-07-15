@@ -2396,7 +2396,7 @@ Requirements:
 - Meet WCAG 2.2 AA for applicable contrast, keyboard access, labels, focus visibility, and semantic structure.
 - Never encode allow/deny/warning state through color alone.
 - Announce asynchronous status changes through an appropriate live region.
-- Graph content must have an equivalent structured list.
+- Graph content must have a concise screen-reader-only description and keyboard-operable nodes; a visible list is not required.
 - Every icon-only control requires an accessible name and tooltip.
 - Dialogs trap focus and restore it on close.
 - Tables and JSON views must remain horizontally navigable without hiding controls.
@@ -2986,7 +2986,7 @@ At minimum:
 - Dialog focus is trapped and restored.
 - Status is not color-only.
 - Reduced-motion emulation removes nonessential animation.
-- Policy graph has an accessible list alternative.
+- Policy graph has a concise screen-reader-only description and keyboard-operable nodes.
 
 An automated accessibility scanner may be added, but it does not replace these explicit interaction assertions.
 
@@ -3715,8 +3715,8 @@ Read AGENTS.md and SPEC.md Sections 15, 16.1, 17.2–17.5, 19, and Task 11. Impl
 - Natural-language revision targets selected rules, returns a diff, and requires confirmation.
 - Raw JSON view is read-only and syntax-accessible.
 - Graph nodes represent clauses, rules, tools, and issues; edges represent compilation, application, and explicit override.
-- Selecting a graph node focuses the corresponding accessible form/list item.
-- Graph has a semantically equivalent list view.
+- Selecting a graph node focuses the corresponding accessible form control; graph nodes are keyboard-operable.
+- Graph has a concise screen-reader-only description, and its nodes are keyboard-operable.
 - Analyzer issue cards link to the affected rule control.
 - Form changes update bundle hash and invalidate stale activation test status.
 
@@ -3745,7 +3745,7 @@ pnpm build
 **Copy-paste Codex prompt:**
 
 ```text
-Read AGENTS.md and SPEC.md Sections 5 FR-01–FR-05, 9, 12, 17.2, 17.4 B–C, and Task 12. Implement only constitution authoring, compile review, structured rule editing, natural-language revision review, typed diff, policy graph, issue navigation, and accessible graph alternative. Do not let model output or form edits apply without confirmation. Add user-event tests for the six required scenarios. Use React Flow only for visualization; all edits update domain state through typed actions. Run Task 12 checks, commit as "feat: make agent policy authoring inspectable", report and stop.
+Read AGENTS.md and SPEC.md Sections 5 FR-01–FR-05, 9, 12, 17.2, 17.4 B–C, and Task 12. Implement only constitution authoring, compile review, structured rule editing, natural-language revision review, typed diff, policy graph, issue navigation, and a concise screen-reader-only graph description with keyboard-operable nodes. Do not let model output or form edits apply without confirmation. Add user-event tests for the six required scenarios. Use React Flow only for visualization; all edits update domain state through typed actions. Run Task 12 checks, commit as "feat: make agent policy authoring inspectable", report and stop.
 ```
 
 ### Task 13 — Build the attack arena and deterministic incident trace
@@ -3874,7 +3874,7 @@ Read AGENTS.md and SPEC.md Sections 5 FR-10–FR-14, 16.3–16.4, 17.4 F–I, 21
 4. Optimize and store assets locally with poster/static fallbacks.
 5. Remove default-template styling, accidental gradients, low-contrast text, noisy borders, ornamental telemetry, and generic cyberpunk motifs.
 6. Choreograph request → proposal → gate → outcome and breach → amendment → replay without delaying interactions.
-7. Verify keyboard, focus, screen-reader labels, graph alternative, color independence, and reduced motion.
+7. Verify keyboard, focus, screen-reader labels, the graph description and keyboard-operable nodes, color independence, and reduced motion.
 8. Verify that appearance remains coherent in loading, error, fallback, empty, breach, deny, filter, approval, and success states.
 
 **Hard constraints:**
@@ -4034,7 +4034,7 @@ Use the following content as the repository-root `AGENTS.md`. Keep it concise so
 
 - Article Zero is not a chat UI and not a generic cybersecurity dashboard.
 - Always distinguish human policy, compiled policy, agent proposal, and enforced outcome.
-- Preserve keyboard access, visible focus, reduced motion, accessible status, and graph list alternatives.
+- Preserve keyboard access, visible focus, reduced motion, accessible status, and concise screen-reader-only graph descriptions with keyboard-operable nodes.
 - Development-time generated image/motion assets are local files; no runtime media generation.
 - Visual polish must never alter deterministic policy behavior.
 ```
@@ -4082,7 +4082,7 @@ Article Zero is complete only when every statement below is true.
 - Generated development-time identity and motion assets are present and optimized.
 - The breach, amendment, test, and replay sequence is visually understandable without narration.
 - The interface remains clear at `1280×720`.
-- Keyboard access, focus, reduced motion, non-color status cues, and graph alternatives work.
+- Keyboard access, focus, reduced motion, non-color status cues, the graph description, and keyboard-operable nodes work.
 - Loading, fallback, provider error, validation error, blocked activation, and empty audit states are designed rather than accidental.
 
 ### 24.4 Release quality

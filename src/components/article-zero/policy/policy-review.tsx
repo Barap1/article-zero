@@ -76,11 +76,42 @@ export function PolicyReview() {
   };
 
   return <section className="az-compiled-policy-review" id="compiled-policy-review" aria-labelledby="compiled-policy-review-title">
-    <div className="az-panel-header"><div><p className="az-eyebrow">Compiled policy</p><h1 id="compiled-policy-review-title">Structured policy review</h1><p className="az-panel-lede">Closed controls are the source of truth. Every change is previewed before it updates the draft bundle.</p></div><button className="az-button az-button-secondary" type="button" disabled title="Run activation tests before activating this draft.">Activate Constitution</button></div>
-    <div className="az-policy-layout"><div className="az-policy-main"><div className="az-rule-selector" aria-label="Select a rule">{draft.policyBundle.rules.map((rule) => <button className={`az-rule-selector-item ${rule.id === selectedRuleId ? "az-rule-selector-item-selected" : ""}`} key={rule.id} type="button" onClick={() => focusRule(rule.id)}>{rule.name}</button>)}</div><PolicyRuleEditor rule={ruleDraft} rules={draft.policyBundle.rules} onChange={setRuleDraft} /><div className="az-inline-actions"><button className="az-button az-button-primary" type="button" onClick={() => setStructuredPreview(previewStructuredRuleChange(draft.policyBundle, ruleDraft))}>Review structured change</button><button className="az-button az-button-quiet" type="button" onClick={() => setRuleDraft(draft.policyBundle.rules.find((rule) => rule.id === selectedRuleId) ?? null)}>Discard local edits</button></div>{structuredPreview ? <section className="az-review-card" aria-labelledby="structured-preview-title"><h2 id="structured-preview-title">Structured change pending confirmation</h2><PolicyDiff diff={structuredPreview.diff} /><div className="az-inline-actions"><button className="az-button az-button-primary" type="button" disabled={isAccepting} onClick={() => { void acceptStructured(); }}>Accept structured change</button><button className="az-button az-button-quiet" type="button" onClick={() => setStructuredPreview(null)}>Reject structured change</button></div></section> : null}</div><PolicyIssues issues={issues} onSelectRule={focusRule} /></div>
-    <section className="az-revision-card" aria-labelledby="revision-title"><div className="az-section-heading"><div><p className="az-eyebrow">Natural-language revision</p><h2 id="revision-title">Request a typed correction</h2></div>{revision.state.status === "success" ? <span className="az-source-badge">Preview ready</span> : null}</div><fieldset><legend>Rules to revise</legend><div className="az-checkbox-grid">{draft.policyBundle.rules.map((rule) => <label key={rule.id}><input type="checkbox" checked={selectedRevisionRuleIds.includes(rule.id)} onChange={() => toggleRevisionRule(rule.id)} />{rule.name}</label>)}</div></fieldset><label className="az-field-label" htmlFor="natural-language-correction">Natural-language correction</label><textarea id="natural-language-correction" value={instruction} onChange={(event) => setInstruction(event.target.value)} /><div className="az-inline-actions"><button className="az-button az-button-primary" type="button" disabled={revision.isLoading || selectedRevisionRuleIds.length === 0 || instruction.trim().length === 0} onClick={() => { void previewRevision(); }}>{revision.isLoading ? "Preparing revision…" : "Preview revision"}</button></div>{revision.state.status === "error" ? <p className="az-error-copy" role="alert">{revision.state.error.message}</p> : null}{revisionPreview ? <section className="az-review-card"><h3>Revision preview · {revisionPreview.source === "groq" ? "Live Groq" : "Limited sample fallback"}</h3><p>{revisionPreview.preview.result.changeSummary}</p><PolicyDiff diff={revisionPreview.preview.diff} /><div className="az-inline-actions"><button className="az-button az-button-primary" type="button" disabled={isAccepting} onClick={() => { void acceptRevision(); }}>Accept revision</button><button className="az-button az-button-quiet" type="button" onClick={() => setRevisionPreview(null)}>Reject revision</button></div></section> : null}</section>
-    <details className="az-raw-json"><summary>Read-only policy JSON</summary><pre tabIndex={0} aria-label="Read-only compiled policy JSON">{JSON.stringify(draft.policyBundle, null, 2)}</pre></details>
-    <PolicyGraph clauses={draft.clauses} rules={draft.policyBundle.rules} issues={issues} onSelectClause={focusClause} onSelectRule={focusRule} />
+    <div className="az-panel-header"><div><p className="az-eyebrow">Compiled policy</p><h1 id="compiled-policy-review-title">Structured policy review</h1><p className="az-panel-lede">Review the enforceable summary first. Expand a section only when you need to edit its closed controls.</p></div><span className="az-status-chip">Draft policy</span></div>
+    <div className="az-policy-layout">
+      <div className="az-policy-main">
+        <div className="az-rule-selector" aria-label="Select a rule">{draft.policyBundle.rules.map((rule) => <button className={`az-rule-selector-item ${rule.id === selectedRuleId ? "az-rule-selector-item-selected" : ""}`} key={rule.id} type="button" onClick={() => focusRule(rule.id)}>{rule.name}</button>)}</div>
+        <PolicyRuleEditor rule={ruleDraft} rules={draft.policyBundle.rules} onChange={setRuleDraft} />
+        {structuredPreview ? <section className="az-review-card" aria-labelledby="structured-preview-title"><h2 id="structured-preview-title">Structured change pending confirmation</h2><PolicyDiff diff={structuredPreview.diff} /><div className="az-inline-actions"><button className="az-button az-button-primary" type="button" disabled={isAccepting} onClick={() => { void acceptStructured(); }}>Accept structured change</button><button className="az-button az-button-quiet" type="button" onClick={() => setStructuredPreview(null)}>Reject structured change</button></div></section> : null}
+      </div>
+      <PolicyIssues issues={issues} onSelectRule={focusRule} />
+    </div>
+
+    <details className="az-policy-disclosure az-revision-disclosure">
+      <summary>Natural-language revision</summary>
+      <div className="az-disclosure-body">
+        <div className="az-section-heading"><div><p className="az-eyebrow">Optional revision</p><h2>Request a typed correction</h2></div>{revision.state.status === "success" ? <span className="az-source-badge">Preview ready</span> : null}</div>
+        <fieldset><legend>Rules to revise</legend><div className="az-checkbox-grid">{draft.policyBundle.rules.map((rule) => <label key={rule.id}><input type="checkbox" checked={selectedRevisionRuleIds.includes(rule.id)} onChange={() => toggleRevisionRule(rule.id)} />{rule.name}</label>)}</div></fieldset>
+        <label className="az-field-label" htmlFor="natural-language-correction">Natural-language correction</label><textarea id="natural-language-correction" value={instruction} onChange={(event) => setInstruction(event.target.value)} />
+        <div className="az-inline-actions"><button className="az-button az-button-primary" type="button" disabled={revision.isLoading || selectedRevisionRuleIds.length === 0 || instruction.trim().length === 0} onClick={() => { void previewRevision(); }}>{revision.isLoading ? "Preparing revision…" : "Preview revision"}</button></div>
+        {revision.state.status === "error" ? <p className="az-error-copy" role="alert">{revision.state.error.message}</p> : null}
+        {revisionPreview ? <section className="az-review-card"><h3>Revision preview · {revisionPreview.source === "groq" ? "Live Groq" : "Limited sample fallback"}</h3><p>{revisionPreview.preview.result.changeSummary}</p><PolicyDiff diff={revisionPreview.preview.diff} /><div className="az-inline-actions"><button className="az-button az-button-primary" type="button" disabled={isAccepting} onClick={() => { void acceptRevision(); }}>Accept revision</button><button className="az-button az-button-quiet" type="button" onClick={() => setRevisionPreview(null)}>Reject revision</button></div></section> : null}
+      </div>
+    </details>
+
+    <details className="az-policy-disclosure">
+      <summary>Raw JSON</summary>
+      <div className="az-disclosure-body az-raw-json-body"><pre tabIndex={0} aria-label="Read-only compiled policy JSON">{JSON.stringify(draft.policyBundle, null, 2)}</pre></div>
+    </details>
+
+    <details className="az-policy-disclosure az-policy-graph-disclosure">
+      <summary>Policy graph</summary>
+      <div className="az-disclosure-body"><PolicyGraph clauses={draft.clauses} rules={draft.policyBundle.rules} issues={issues} onSelectClause={focusClause} onSelectRule={focusRule} /></div>
+    </details>
+
+    <div className="az-policy-action-bar" role="group" aria-label="Policy review actions">
+      <div><p className="az-eyebrow">Next action</p><p>Review and accept a typed change before testing or activation.</p></div>
+      <div className="az-inline-actions"><button className="az-button az-button-primary" type="button" onClick={() => setStructuredPreview(previewStructuredRuleChange(draft.policyBundle, ruleDraft))}>Review structured change</button><button className="az-button az-button-quiet" type="button" onClick={() => setRuleDraft(draft.policyBundle.rules.find((rule) => rule.id === selectedRuleId) ?? null)}>Discard local edits</button><button className="az-button az-button-secondary" type="button" disabled title="Run activation tests before activating this draft.">Activate Constitution</button></div>
+    </div>
   </section>;
 }
 

@@ -7,6 +7,7 @@ import type { AttackRun, AuditEvent, ConstitutionVersion } from "../../../domain
 import { ATTACK_SCENARIOS, HERO_ATTACK_SCENARIO } from "../../../hospital/fixtures/scenarios";
 import { useRunAttack } from "../../../hooks/use-run-attack";
 import { createId } from "../../../lib/ids";
+import { formatDisplayLabel } from "../../../lib/display-label";
 import { freezeAttack } from "../../../red-team/freeze-replay";
 import { useWorkspaceStore } from "../../../workspace/workspace-store";
 import { ProposalCard, SourceBadge } from "./attack-details";
@@ -21,13 +22,10 @@ type AttackArenaProps = {
 };
 
 function outcomeLabel(outcome: AttackRun["decision"]["outcome"]): string {
-  if (outcome === "DENY") return "Blocked";
-  if (outcome === "ALLOW") return "Allowed";
-  if (outcome === "ALLOW_WITH_FIELD_FILTER") return "Allowed with field filter";
-  return "Needs human approval";
+  return formatDisplayLabel(outcome);
 }
 
-export function AttackArena({ version, onAddAttackRun, onAddAuditEvents = () => undefined, onAdvanceToAmendment: _onAdvanceToAmendment, onViewIncident = () => undefined, initialRun }: AttackArenaProps) {
+export function AttackArena({ version, onAddAttackRun, onAddAuditEvents = () => undefined, onViewIncident = () => undefined, initialRun }: AttackArenaProps) {
   const initialScenario = ATTACK_SCENARIOS.find((scenario) => scenario.id === initialRun?.scenarioId) ?? HERO_ATTACK_SCENARIO;
   const [scenarioId, setScenarioId] = useState(initialScenario.id);
   const [requestText, setRequestText] = useState(initialRun?.requestText ?? initialScenario.requestText);
@@ -72,7 +70,7 @@ export function AttackArena({ version, onAddAttackRun, onAddAuditEvents = () => 
   };
 
   return <section className="az-attack-arena" aria-labelledby="attack-arena-title">
-    <div className="az-panel-header"><div><p className="az-eyebrow">Synthetic request scenario</p><h1 id="attack-arena-title">Attack</h1><p className="az-panel-lede">Choose a bounded synthetic scenario, edit its wording, and inspect the typed proposal before the deterministic policy decision.</p></div><span className="az-synthetic-context">Synthetic data only</span></div>
+    <div className="az-panel-header"><div><p className="az-eyebrow">Synthetic request scenario</p><h1 id="attack-arena-title">Attack</h1><p className="az-panel-lede">Choose a bounded sample scenario, edit its wording, and inspect the typed proposal before the deterministic policy decision.</p></div><span className="az-status-chip">Sample scenario</span></div>
     <div className="az-attack-layers" aria-label="Attack progression">
       <motion.section className="az-attack-card" initial={{ opacity: 0, x: reduceMotion ? 0 : -12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: reduceMotion ? 0 : 0.22 }} aria-labelledby="attacker-request-title">
         <div className="az-section-heading"><div><p className="az-eyebrow">Step 1 Request</p><h2 id="attacker-request-title">Request</h2></div><span className="az-status-chip">{scenario.name}</span></div>

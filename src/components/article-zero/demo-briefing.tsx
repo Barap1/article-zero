@@ -2,12 +2,17 @@
 
 import { ArrowRight, Play } from "lucide-react";
 
+import type { WorkspaceState } from "../../domain/schemas";
+import { ProviderStatusBadge } from "./provider-status-badge";
+
 type DemoBriefingProps = {
   readonly onOpenConstitution: () => void;
   readonly onRunGuidedDemo: () => void;
+  readonly activeVersionLabel: string;
+  readonly providerStatus: WorkspaceState["providerStatus"];
 };
 
-export function DemoBriefing({ onOpenConstitution, onRunGuidedDemo }: DemoBriefingProps) {
+export function DemoBriefing({ onOpenConstitution, onRunGuidedDemo, activeVersionLabel, providerStatus }: DemoBriefingProps) {
   return (
     <section className="az-briefing" aria-labelledby="briefing-title">
       <div className="az-briefing-kicker"><span className="az-status-dot" aria-hidden="true" />Sample hospital policy workspace</div>
@@ -23,6 +28,11 @@ export function DemoBriefing({ onOpenConstitution, onRunGuidedDemo }: DemoBriefi
           <span className="az-callout-number">01</span>
           <p>All records, identities, and outcomes in this sample are synthetic. Article Zero is not a clinical system.</p>
         </div>
+      </div>
+      <div className="az-briefing-meta" aria-label="Workspace setup">
+        <div><span>Working version</span><strong>{activeVersionLabel}</strong></div>
+        <ProviderStatusBadge source={providerStatus} />
+        <span className="az-synthetic-note"><span className="az-status-dot az-status-dot-synthetic" aria-hidden="true" />Sample data only</span>
       </div>
       <div className="az-briefing-actions">
         <button className="az-button az-button-primary" type="button" onClick={onOpenConstitution}>Open the policy workspace <ArrowRight size={16} aria-hidden="true" /></button>

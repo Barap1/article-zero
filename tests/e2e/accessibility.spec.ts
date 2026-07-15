@@ -10,6 +10,7 @@ test("command center preserves keyboard landmarks and reduced-motion behavior", 
   await expect(page.getByText("Sample workspace. Synthetic data only. Not for clinical use.")).toBeVisible();
 
   await page.getByRole("button", { name: "Open the policy workspace" }).click();
-  await expect(page.getByRole("region", { name: "Policy graph text alternative" })).toBeVisible();
+  await expect(page.locator("#policy-graph-description")).toHaveClass(/az-visually-hidden/);
+  await expect(page.getByText("Graph text alternative")).toHaveCount(0);
   await expect(page.locator(".az-stage-transition")).toHaveCSS("animation-duration", "0s");
 });

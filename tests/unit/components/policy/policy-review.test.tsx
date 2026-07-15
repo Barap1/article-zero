@@ -51,6 +51,7 @@ it("stages an identity verification condition before the structured change is ac
   useWorkspaceStore.setState({ workspace, hasHydrated: true, isHydrating: false, showBriefing: false, errorMessage: null });
   render(<PolicyReview />);
 
+  await user.click(screen.getByText("Conditions"));
   await user.selectOptions(screen.getByLabelText("Condition 1 fact"), "actor.identityVerified");
   await user.click(screen.getByRole("button", { name: "Review structured change" }));
 
@@ -70,6 +71,7 @@ it("shows a natural-language revision diff without applying it and disables acti
   useWorkspaceStore.setState({ workspace: createSeedWorkspace(), hasHydrated: true, isHydrating: false, showBriefing: false, errorMessage: null });
   render(<PolicyReview />);
 
+  await user.click(screen.getByText("Natural-language revision"));
   await user.clear(screen.getByLabelText("Natural-language correction"));
   await user.paste("Require verified identity and disclose only emergency fields.");
   await user.click(screen.getByRole("button", { name: "Preview revision" }));
@@ -78,4 +80,21 @@ it("shows a natural-language revision diff without applying it and disables acti
   expect(screen.getByText("Changed rules")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Accept revision" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Activate Constitution" })).toHaveProperty("disabled", true);
+});
+
+it("keeps basics visible and progressively discloses the rule controls", async () => {
+  const user = userEvent.setup();
+  useWorkspaceStore.setState({ workspace: createSeedWorkspace(), hasHydrated: true, isHydrating: false, showBriefing: false, errorMessage: null });
+  render(<PolicyReview />);
+
+  expect(screen.getByText("Basics")).toBeTruthy();
+  expect(screen.getByLabelText("Effect")).toBeTruthy();
+  expect(screen.getByText("Conditions").closest("details")).toHaveProperty("open", false);
+
+  await user.click(screen.getByText("Conditions"));
+  expect(screen.getByLabelText("Condition 1 fact")).toBeTruthy();
+  expect(screen.getByText("Permissions & fields")).toBeTruthy();
+  expect(screen.getByText("Advanced controls")).toBeTruthy();
+  expect(screen.getByText("Natural-language revision")).toBeTruthy();
+  expect(screen.getByText("Policy graph")).toBeTruthy();
 });

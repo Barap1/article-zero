@@ -5,7 +5,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Article Zero",
-  description: "Synthetic constitutional command center",
+  description: "A calm workspace for authoring, testing, and enforcing synthetic hospital-agent policy.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {

@@ -66,6 +66,6 @@
 
 - Article Zero is not a chat UI and not a generic cybersecurity dashboard.
 - Always distinguish human policy, compiled policy, agent proposal, and enforced outcome.
-- Preserve keyboard access, visible focus, reduced motion, accessible status, and graph list alternatives.
+- Preserve keyboard access, visible focus, reduced motion, accessible status, and concise screen-reader-only graph descriptions with keyboard-operable nodes.
 - Development-time generated image/motion assets are local files; no runtime media generation.
 - Visual polish must never alter deterministic policy behavior.

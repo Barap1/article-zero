@@ -17,12 +17,15 @@
   --az-warning-soft: #f0e2c9;
   --az-focus: #247d71;
   --az-shadow: 0 16px 50px rgb(28 28 22 / 9%);
+  --az-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --az-display: Georgia, "Times New Roman", serif;
+  --az-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
   color-scheme: light;
 }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; background: var(--az-paper); }
-body { margin: 0; color: var(--az-ink); background: var(--az-paper); font-family: Inter, Aptos, "Segoe UI", sans-serif; font-size: 16px; }
+body { margin: 0; color: var(--az-ink); background: var(--az-paper); font-family: var(--az-body); font-size: 16px; }
 button, input, textarea, select { color: inherit; font: inherit; }
 button, a, input, textarea, select, summary { outline: none; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible { box-shadow: 0 0 0 3px var(--az-surface), 0 0 0 6px var(--az-focus) !important; }
@@ -296,6 +299,8 @@ input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--az-accen
   .az-header-actions svg { width: 1rem; height: 1rem; }
   .az-command-layout { display: block; }
   .az-sidebar { position: sticky; z-index: 20; top: 0; display: block; width: 100%; height: auto; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--az-ink); padding: .55rem .7rem; }
+  .az-sidebar { scrollbar-width: none; }
+  .az-sidebar::-webkit-scrollbar { display: none; }
   .az-stage-rail-heading, .az-rail-note, .az-sidebar-footer { display: none; }
   .az-stage-list { display: flex; min-width: max-content; }
   .az-stage-list::before { display: none; }
@@ -324,4 +329,104 @@ input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--az-accen
   html { scroll-behavior: auto; }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; }
   .az-button:hover:not(:disabled) { transform: none; }
+}
+
+/* Article Zero repair system: calm hierarchy, readable labels, and safe shrinkage. */
+.az-header { display: flex; min-width: 0; justify-content: space-between; gap: 1rem; }
+.az-brand-button { min-width: 0; border: 0; padding: 0; color: var(--az-ink); background: transparent; cursor: pointer; text-align: left; }
+.az-brand-button:hover { background: transparent; }
+.az-brand-button > span { min-width: 0; }
+.az-brand-subtitle { display: block; max-width: 24ch; overflow-wrap: anywhere; font-family: var(--az-display); }
+.az-header-actions { flex: 0 0 auto; min-width: 0; }
+.az-header-actions .az-button { white-space: nowrap; }
+.az-button-label { display: inline-block; }
+.az-workspace-context, .az-briefing-meta { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: .6rem .9rem; margin: 0 auto 1rem; border-bottom: 1px solid var(--az-line); padding: 0 0 .75rem; color: var(--az-muted); font-size: .78rem; }
+.az-workspace-context > div, .az-briefing-meta > div { display: grid; gap: .1rem; min-width: 0; }
+.az-workspace-context span, .az-briefing-meta span { overflow-wrap: anywhere; }
+.az-workspace-context strong, .az-briefing-meta strong { color: var(--az-ink); font-weight: 800; }
+.az-workspace-context .az-provider-badge, .az-briefing-meta .az-provider-badge { margin-left: auto; }
+.az-synthetic-note { display: inline-flex; align-items: center; gap: .4rem; color: var(--az-muted); }
+.az-briefing-meta { max-width: 68rem; margin-top: 1.5rem; border-top: 1px solid var(--az-line); padding-top: .8rem; }
+
+.az-panel-header h1, .az-section-heading h2, .az-section-heading h3, .az-attack-card h2, .az-policy-gate h2, .az-incident h2, .az-replay-card h2, .az-approval-card h2, .az-dialog h2, .az-briefing h1, .az-briefing-story h2, .az-policy-sentence, .az-clause-editor textarea, .az-amendment-original, .az-completion-outcomes dd, .az-clause-item strong, .az-placeholder-index { font-family: var(--az-display); }
+.az-panel-header h1 { max-width: 22ch; line-height: 1.02; }
+.az-panel-lede { font-family: var(--az-body); font-size: 1rem; }
+.az-help-text, .az-warning-copy, .az-success-copy { font-size: .86rem; }
+.az-error-copy { font-size: .86rem; line-height: 1.55; }
+.az-field-label, .az-rule-basics label, .az-condition-row label { font-size: .8rem; }
+.az-issue strong, .az-test-results strong, .az-warning-list strong { font-size: .8rem; }
+.az-issue-severity { display: block; margin-bottom: .2rem; color: var(--az-warning); font-size: .72rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.az-issue p, .az-warning-list p { font-size: .84rem; line-height: 1.5; }
+.az-status-chip, .az-source-badge, .az-provider-badge { font-size: .76rem; }
+.az-rule-selector-item { max-width: 100%; overflow-wrap: anywhere; font-size: .8rem; }
+.az-rule-editor, .az-policy-issues, .az-activation-card, .az-replay-card, .az-approval-card, .az-review-card, .az-clause-editor, .az-clause-list, .az-incident, .az-policy-gate { min-width: 0; }
+.az-policy-layout > *, .az-policy-main > *, .az-authoring-grid > *, .az-amendment-grid > *, .az-completion-grid > *, .az-attack-layers > *, .az-replay-grid > * { min-width: 0; }
+.az-rule-editor fieldset, .az-policy-disclosure fieldset { min-width: 0; }
+.az-rule-basics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.az-rule-advanced-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.az-checkbox-grid label, .az-condition-row label, .az-issue, .az-test-results li, .az-warning-list li { min-width: 0; overflow-wrap: anywhere; }
+.az-checkbox-grid label { font-size: .82rem; line-height: 1.35; }
+textarea, input:not([type="checkbox"]):not([type="radio"]), select { min-width: 0; max-width: 100%; }
+textarea, input, select, button { overflow-wrap: anywhere; }
+.az-typed-action dd, .az-permitted-fields li, .az-field-list li { overflow-wrap: anywhere; font-family: var(--az-body); font-size: .82rem; }
+.az-field-list li { line-height: 1.35; }
+
+.az-policy-disclosure, .az-suggestion-details, .az-incident-decision-details, .az-completion-tests { min-width: 0; margin-top: 1rem; border: 1px solid var(--az-line-strong); background: var(--az-surface); }
+.az-policy-disclosure > summary, .az-suggestion-details > summary, .az-incident-decision-details > summary, .az-completion-tests > summary, .az-activation-details > summary { min-height: 2.9rem; padding: .82rem 1rem; color: var(--az-ink); background: var(--az-surface); cursor: pointer; font-size: .86rem; font-weight: 800; }
+.az-policy-disclosure > summary::marker, .az-suggestion-details > summary::marker, .az-incident-decision-details > summary::marker, .az-completion-tests > summary::marker, .az-activation-details > summary::marker { color: var(--az-accent); }
+.az-disclosure-body { min-width: 0; border-top: 1px solid var(--az-line); padding: 1rem; }
+.az-disclosure-body > :first-child { margin-top: 0; }
+.az-rule-basics-section { margin-top: 1rem; border: 1px solid var(--az-line); padding: .9rem; }
+.az-rule-basics-section legend { padding-inline: .35rem; color: var(--az-ink); font-size: .86rem; font-weight: 800; }
+.az-policy-disclosure + .az-policy-disclosure { margin-top: .7rem; }
+.az-raw-json-body { padding: 0; }
+.az-raw-json-body pre { max-width: 100%; margin: 0; overflow: auto; border: 0; padding: 1rem; color: #e9e5da; background: var(--az-ink); font-family: var(--az-mono); font-size: .76rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.az-policy-graph-disclosure .az-disclosure-body { padding: .5rem; }
+.az-policy-graph-disclosure .az-policy-graph { margin-top: 0; border: 0; box-shadow: none; }
+.az-policy-action-bar { position: sticky; z-index: 4; bottom: .75rem; display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.25rem; border: 1px solid var(--az-ink); padding: .8rem 1rem; background: rgb(255 253 247 / 96%); box-shadow: 4px 4px 0 var(--az-accent); }
+.az-compiled-policy-review { scroll-margin-top: 1rem; }
+.az-policy-action-bar p { margin: .15rem 0 0; color: var(--az-muted); font-size: .84rem; }
+.az-policy-action-bar .az-inline-actions { flex: 0 0 auto; margin-top: 0; }
+.az-incident-primary-action { display: flex; justify-content: flex-start; margin-top: 1rem; }
+.az-incident-decision-details { border-color: var(--az-line); background: rgb(255 253 247 / 72%); }
+.az-incident-decision-details > summary { background: transparent; }
+.az-incident-decision-details .az-disclosure-grid { margin: 0; padding: 0 1rem 1rem; }
+.az-incident-decision-details .az-root-causes, .az-incident-decision-details .az-trace { margin-inline: 1rem; }
+.az-activation-details { padding: 0; }
+.az-activation-details > summary { list-style-position: inside; }
+.az-activation-details .az-disclosure-body { padding: 1rem; }
+.az-activation-decision h2 { margin: .3rem 0; font-family: var(--az-display); font-size: clamp(1.3rem, 2vw, 1.8rem); font-weight: 500; }
+.az-completion-tests { margin-top: .75rem; border-color: var(--az-line); box-shadow: none; }
+.az-completion-tests .az-test-results { margin: 0; padding: 0 1rem 1rem; }
+.az-visually-hidden { position: absolute !important; width: 1px !important; height: 1px !important; margin: -1px !important; border: 0 !important; padding: 0 !important; overflow: hidden !important; clip: rect(0 0 0 0) !important; clip-path: inset(50%) !important; white-space: nowrap !important; }
+
+@media (max-width: 1199px) {
+  .az-header { gap: .75rem; padding-inline: 1rem; }
+  .az-brand-lockup { min-width: 0; }
+  .az-button-label { display: none; }
+  .az-header-actions .az-button { width: 2.75rem; padding-inline: 0; }
+  .az-rule-basics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .az-policy-action-bar { align-items: flex-start; flex-direction: column; }
+  .az-policy-action-bar .az-inline-actions { width: 100%; }
+}
+
+@media (max-width: 767px) {
+  .az-header { min-height: 4.1rem; padding: .6rem .75rem; }
+  .az-seal { width: 2.35rem; height: 2.35rem; }
+  .az-brand-lockup { gap: .55rem; }
+  .az-brand-subtitle { max-width: 20ch; font-size: .78rem; }
+  .az-header-actions { gap: .15rem; }
+  .az-main-surface { padding: 1rem .8rem; }
+  .az-workspace-context .az-provider-badge, .az-briefing-meta .az-provider-badge { margin-left: 0; }
+  .az-workspace-context, .az-briefing-meta { align-items: flex-start; flex-direction: column; }
+  .az-briefing-meta { padding-top: .75rem; }
+  .az-rule-basics, .az-rule-advanced-grid { grid-template-columns: 1fr; }
+  .az-policy-action-bar { position: static; padding: .8rem; }
+  .az-compiled-policy-review { scroll-margin-top: 6rem; }
+  .az-policy-action-bar .az-inline-actions { align-items: stretch; flex-direction: column; }
+  .az-policy-action-bar .az-button { width: 100%; }
+  .az-disclosure-body { padding: .8rem; }
+  .az-incident-decision-details .az-disclosure-grid { padding-inline: .8rem; }
+  .az-incident-decision-details .az-root-causes, .az-incident-decision-details .az-trace { margin-inline: .8rem; }
+  .az-raw-json-body pre { font-size: .72rem; }
 }

@@ -5,6 +5,7 @@ import type { Edge, Node } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 import type { ConstitutionClause, PolicyIssue, PolicyRule } from "../../../domain/schemas";
+import { formatDisplayLabel } from "../../../lib/display-label";
 
 type PolicyGraphProps = {
   readonly clauses: readonly ConstitutionClause[];
@@ -43,8 +44,8 @@ function graphData(clauses: readonly ConstitutionClause[], rules: readonly Polic
     rule.appliesToTools.forEach((tool, toolIndex) => {
       const toolId = `tool:${tool}`;
       if (!targets.has(toolId)) {
-        nodes.push({ id: toolId, position: { x: 610, y: (nodes.length + toolIndex) * 70 }, data: { label: tool }, type: "output" });
-        targets.set(toolId, { kind: "tool", targetId: tool, label: tool });
+        nodes.push({ id: toolId, position: { x: 610, y: (nodes.length + toolIndex) * 70 }, data: { label: formatDisplayLabel(tool) }, type: "output" });
+        targets.set(toolId, { kind: "tool", targetId: tool, label: formatDisplayLabel(tool) });
       }
       edges.push({ id: `applies:${rule.id}:${tool}`, source: id, target: toolId, label: "applies", ...activeEdgeStyle(highlighted.has(rule.id)) });
     });
@@ -52,8 +53,8 @@ function graphData(clauses: readonly ConstitutionClause[], rules: readonly Polic
   });
   issues.forEach((issue, index) => {
     const id = `issue:${issue.id}`;
-    nodes.push({ id, position: { x: 900, y: index * 108 }, data: { label: `${issue.severity}: ${issue.code}` }, type: "output" });
-    targets.set(id, { kind: "issue", targetId: issue.relatedRuleIds[0] ?? "", label: issue.code });
+    nodes.push({ id, position: { x: 900, y: index * 108 }, data: { label: `${formatDisplayLabel(issue.severity)}: ${formatDisplayLabel(issue.code)}` }, type: "output" });
+    targets.set(id, { kind: "issue", targetId: issue.relatedRuleIds[0] ?? "", label: formatDisplayLabel(issue.code) });
     issue.relatedRuleIds.forEach((ruleId) => edges.push({ id: `finding:${issue.id}:${ruleId}`, source: `rule:${ruleId}`, target: id, label: "finding" }));
   });
   return { nodes, edges, targets };
@@ -68,8 +69,8 @@ export function PolicyGraph({ clauses, rules, issues, onSelectClause, onSelectRu
     if ((target.kind === "rule" || target.kind === "issue") && target.targetId) onSelectRule(target.targetId);
   };
   return <section className="az-policy-graph" aria-labelledby="policy-graph-title">
-    <div className="az-section-heading"><div><p className="az-eyebrow">Compiled-policy map</p><h2 id="policy-graph-title">Policy graph</h2></div><span className="az-help-text">Clauses compile into rules; rules apply to tools.</span></div>
-    <div className="az-flow-canvas" aria-label="Interactive policy graph"><ReactFlow nodes={nodes} edges={edges} fitView fitViewOptions={{ padding: 0.18 }} minZoom={0.4} maxZoom={1.5} nodesDraggable={false} nodesConnectable={false} nodesFocusable onNodeClick={(_, node) => select(node.id)}><Background color="#c8c0af" gap={24} size={1} /><Controls showInteractive={false} /></ReactFlow></div>
-    <section className="az-graph-list" aria-label="Policy graph text alternative"><h3>Graph text alternative</h3><ul>{[...targets.entries()].map(([nodeId, target]) => <li key={nodeId} aria-current={target.kind === "rule" && highlightedRuleIds.includes(target.targetId) ? "step" : undefined}>{target.kind === "tool" ? <span>{target.label}</span> : <button type="button" className="az-text-button" onClick={() => select(nodeId)}>{target.kind}: {target.label}</button>}</li>)}</ul></section>
+    <div className="az-section-heading"><div><p className="az-eyebrow">Compiled policy map</p><h2 id="policy-graph-title">Policy map</h2></div><span className="az-help-text">Clauses compile into rules; rules apply to tools.</span></div>
+    <p id="policy-graph-description" className="az-visually-hidden">Policy graph with {clauses.length} clauses, {rules.length} rules, {targets.size} connected nodes, and {issues.length} findings. Use Tab to move between focusable nodes, then activate a node to open its related policy item.</p>
+    <div className="az-flow-canvas" role="group" aria-label="Interactive policy graph" aria-describedby="policy-graph-description"><ReactFlow nodes={nodes} edges={edges} fitView fitViewOptions={{ padding: 0.18 }} minZoom={0.4} maxZoom={1.5} nodesDraggable={false} nodesConnectable={false} nodesFocusable onNodeClick={(_, node) => select(node.id)}><Background color="#c8c0af" gap={24} size={1} /><Controls showInteractive={false} /></ReactFlow></div>
   </section>;
 }

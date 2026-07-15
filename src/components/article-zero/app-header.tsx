@@ -3,49 +3,34 @@
 import Image from "next/image";
 import { ClipboardList, Download, RotateCcw } from "lucide-react";
 
-import type { WorkspaceState } from "../../domain/schemas";
-import { ProviderStatusBadge } from "./provider-status-badge";
-
 type AppHeaderProps = {
-  readonly workspace: WorkspaceState;
+  readonly onReturnHome: () => void;
   readonly onReset: () => void;
   readonly onExport: () => void;
   readonly onOpenAudit: () => void;
   readonly isExporting: boolean;
 };
 
-export function AppHeader({ workspace, onReset, onExport, onOpenAudit, isExporting }: AppHeaderProps) {
-  const activeVersion = workspace.versions.find((version) => version.id === workspace.activeVersionId);
-  const legacyRisk = activeVersion?.status === "LEGACY_UNSAFE_BASELINE";
-
+export function AppHeader({ onReturnHome, onReset, onExport, onOpenAudit, isExporting }: AppHeaderProps) {
   return (
     <header className="az-header">
-      <div className="az-brand-lockup">
+      <button className="az-brand-lockup az-brand-button" type="button" onClick={onReturnHome} aria-label="Article Zero, return home">
         <Image className="az-seal" src="/generated/article-zero-seal.webp" width={48} height={48} alt="" priority />
-        <div>
-          <p className="az-eyebrow">Article Zero</p>
-          <p className="az-brand-subtitle">Constitutional command center</p>
-        </div>
-      </div>
-      <div className="az-header-context">
-        <div className="az-version-context">
-          <span className="az-context-label">Active version</span>
-          <span className={legacyRisk ? "az-version-badge az-version-risk" : "az-version-badge"}>{activeVersion?.label ?? "Unavailable"}</span>
-          {legacyRisk && <span className="az-risk-label">Legacy risk</span>}
-        </div>
-        <ProviderStatusBadge source={workspace.providerStatus} />
-        <span className="az-synthetic-context"><span className="az-status-dot az-status-dot-synthetic" aria-hidden="true" />Synthetic data only</span>
-        <div className="az-header-actions">
-          <button className="az-button az-button-quiet" type="button" onClick={onOpenAudit}><ClipboardList size={15} aria-hidden="true" />Audit timeline</button>
-          <button className="az-button az-button-quiet" type="button" onClick={onExport} disabled={isExporting}>
+        <span>
+          <span className="az-eyebrow">Article Zero</span>
+          <span className="az-brand-subtitle">Constitutional policy workspace</span>
+        </span>
+      </button>
+      <div className="az-header-actions">
+          <button className="az-button az-button-quiet" type="button" onClick={onOpenAudit} aria-label="Open audit timeline" title="Open audit timeline"><ClipboardList size={15} aria-hidden="true" /><span className="az-button-label">Audit</span></button>
+          <button className="az-button az-button-quiet" type="button" onClick={onExport} disabled={isExporting} aria-label={isExporting ? "Preparing audit export" : "Export audit package"} title="Export audit package">
             <Download size={15} aria-hidden="true" />
-            {isExporting ? "Preparing…" : "Export audit"}
+            <span className="az-button-label">{isExporting ? "Preparing…" : "Export"}</span>
           </button>
-          <button className="az-button az-button-quiet" type="button" onClick={onReset}>
+          <button className="az-button az-button-quiet" type="button" onClick={onReset} aria-label="Reset workspace" title="Reset workspace">
             <RotateCcw size={15} aria-hidden="true" />
-            Reset workspace
+            <span className="az-button-label">Reset</span>
           </button>
-        </div>
       </div>
     </header>
   );

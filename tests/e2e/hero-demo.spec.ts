@@ -36,7 +36,7 @@ test("sample repair workflow runs from breach to audit export", async ({ page })
 
   await page.getByRole("button", { name: /audit timeline/i }).click();
   await expect(page.getByRole("heading", { name: /audit timeline/i })).toBeVisible();
-  await expect(page.locator(".az-audit-list").getByText("CONSTITUTION_ACTIVATED")).toBeVisible();
+  await expect(page.locator(".az-audit-list").getByText("Constitution activated")).toBeVisible();
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: /export audit package/i }).click();
   await (await download).cancel();

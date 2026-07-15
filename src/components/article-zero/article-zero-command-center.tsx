@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 
 import { analyzePolicyBundle } from "../../policy-engine/analyze-policy-bundle";
+import { ProviderStatusBadge } from "./provider-status-badge";
 import { useActivateConstitution } from "../../hooks/use-activate-constitution";
 import { useDemoKeyboardShortcuts } from "../../hooks/use-demo-keyboard-shortcuts";
 import { useProviderHealth } from "../../hooks/use-provider-health";
@@ -85,16 +86,17 @@ export function ArticleZeroCommandCenter() {
   return (
     <main className="az-shell">
       <a className="az-skip-link" href="#article-zero-main">Skip to command surface</a>
-      <AppHeader workspace={workspace} onReset={() => setResetOpen(true)} onExport={() => { void handleExport(); }} onOpenAudit={() => setAuditOpen(true)} isExporting={isExporting} />
+      <AppHeader onReturnHome={returnHome} onReset={() => setResetOpen(true)} onExport={() => { void handleExport(); }} onOpenAudit={() => setAuditOpen(true)} isExporting={isExporting} />
       <div className="az-command-layout">
         <aside className="az-sidebar">
           <DemoStageRail activeStage={workspace.demoStage} workspace={workspace} onStageChange={setDemoStage} />
         </aside>
         <div className="az-main-surface" id="article-zero-main" tabIndex={-1}>
+          {!showBriefing ? <div className="az-workspace-context" aria-label="Workspace context"><div><span>Working version</span><strong>{activeVersion.label}</strong></div><ProviderStatusBadge source={workspace.providerStatus} /><span className="az-synthetic-note"><span className="az-status-dot az-status-dot-synthetic" aria-hidden="true" />Sample data only</span></div> : null}
           <MotionConfig reducedMotion="user" transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
           <AnimatePresence initial={false}>
           <motion.div className="az-stage-transition" key={showBriefing ? "briefing" : workspace.demoStage} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-          {showBriefing ? <DemoBriefing onOpenConstitution={openConstitution} onRunGuidedDemo={openConstitution} /> : workspace.demoStage === "CONSTITUTION" ? <><ConstitutionWorkspace /><PolicyReview /></> : workspace.demoStage === "ATTACK" ? <AttackArena key="attack" version={activeVersion} onAddAttackRun={addAttackRun} onAddAuditEvents={addAuditEvents} onAdvanceToAmendment={() => setDemoStage("AMENDMENT")} onViewIncident={() => setDemoStage("INCIDENT")} /> : workspace.demoStage === "INCIDENT" ? <IncidentWorkspace key="incident" version={activeVersion} run={selectedAttackRun} onAmend={() => {
+          {showBriefing ? <DemoBriefing activeVersionLabel={activeVersion.label} providerStatus={workspace.providerStatus} onOpenConstitution={openConstitution} onRunGuidedDemo={openConstitution} /> : workspace.demoStage === "CONSTITUTION" ? <><ConstitutionWorkspace /><PolicyReview /></> : workspace.demoStage === "ATTACK" ? <AttackArena key="attack" version={activeVersion} onAddAttackRun={addAttackRun} onAddAuditEvents={addAuditEvents} onAdvanceToAmendment={() => setDemoStage("AMENDMENT")} onViewIncident={() => setDemoStage("INCIDENT")} /> : workspace.demoStage === "INCIDENT" ? <IncidentWorkspace key="incident" version={activeVersion} run={selectedAttackRun} onAmend={() => {
             const draft = workspace.versions.find((version) => version.id === workspace.draftVersionId);
             const clauseId = activeVersion.policyBundle.rules.find((rule) => selectedAttackRun?.decision.appliedRuleIds.includes(rule.id))?.sourceClauseId ?? draft?.clauses[0]?.id;
             if (clauseId !== undefined) selectClause(clauseId);
