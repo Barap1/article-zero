@@ -74,7 +74,7 @@ it("shows a natural-language revision diff without applying it and disables acti
   await user.paste("Require verified identity and disclose only emergency fields.");
   await user.click(screen.getByRole("button", { name: "Preview revision" }));
 
-  expect(await screen.findByText("Revision preview · Deterministic fallback")).toBeTruthy();
+  expect(await screen.findByText("Revision preview · Limited sample fallback")).toBeTruthy();
   expect(screen.getByText("Changed rules")).toBeTruthy();
   expect(screen.getByRole("button", { name: "Accept revision" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Activate Constitution" })).toHaveProperty("disabled", true);

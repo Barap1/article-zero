@@ -14,7 +14,7 @@ describe("FallbackAiProvider", () => {
 
     const result = await provider.compileClause({ clause: SEED_CLAUSES[2]!, existingBundle: LEGACY_POLICY_BUNDLE });
 
-    expect(result.meta).toMatchObject({ source: "fallback", model: "deterministic-fallback" });
+    expect(result.meta).toMatchObject({ source: "fallback", model: "limited-sample-fallback" });
     expect(result.data.rules[0]).toMatchObject({
       id: "rule.emergency.vulnerable-override",
       effect: "ALLOW",
@@ -62,5 +62,15 @@ describe("FallbackAiProvider", () => {
 
     expect(result.data.requestText).toBe(`Urgency variation: ${HERO_ATTACK_SCENARIO.requestText}`);
     expect(result.meta.source).toBe("fallback");
+  });
+
+  it("explains that freeform compilation needs Groq for non-sample clauses", async () => {
+    const provider = new FallbackAiProvider();
+    const clause = { ...SEED_CLAUSES[0]!, text: "A valid arbitrary clause." };
+
+    await expect(provider.compileClause({ clause, existingBundle: LEGACY_POLICY_BUNDLE })).rejects.toMatchObject({
+      code: "PROVIDER_CONFIGURATION",
+      message: expect.stringContaining("GROQ_API_KEY"),
+    });
   });
 });

@@ -6,6 +6,8 @@ import { ATTACK_SCENARIOS } from "../hospital/fixtures/scenarios";
 import { ProviderError } from "./errors";
 import type { AiProvider, AiResult } from "./types";
 
+const FREEFORM_AI_UNAVAILABLE = "Freeform AI compilation and revision are unavailable because GROQ_API_KEY is not configured. You can continue by editing structured policy controls manually, or configure Groq for freeform proposals.";
+
 const vulnerableRule = PolicyRuleSchema.parse({
   id: "rule.emergency.vulnerable-override",
   sourceClauseId: "clause.emergency-response",
@@ -112,22 +114,25 @@ function heroAmendment(text: string): boolean {
 }
 
 function fallbackResult<T>(requestId: string, data: T): AiResult<T> {
-  return { data, meta: { requestId, model: "deterministic-fallback", durationMs: 0, source: "fallback" } };
+  return { data, meta: { requestId, model: "limited-sample-fallback", durationMs: 0, source: "fallback" } };
 }
 
 export class FallbackAiProvider implements AiProvider {
   public async compileClause(input: Parameters<AiProvider["compileClause"]>[0]) {
     const normalizedClause = normalize(input.clause.text);
-    if (normalizedClause.includes("requests from emergency responders may override normal privacy restrictions")) {
-      return fallbackResult(`fallback.compile.${input.clause.id}`, { sourceClauseId: input.clause.id, normalizedClause, interpretationSummary: "Legacy emergency override compiled for deterministic demonstration.", rules: [vulnerableRule], ambiguities: [], assumptions: [] });
+    if (input.clause.id === "clause.emergency-response" && normalizedClause.includes("requests from emergency responders may override normal privacy restrictions")) {
+      return fallbackResult(`fallback.compile.${input.clause.id}`, { sourceClauseId: input.clause.id, normalizedClause, interpretationSummary: "Sample emergency baseline compiled with the limited offline fallback.", rules: [vulnerableRule], ambiguities: [], assumptions: [] });
     }
-    if (heroAmendment(input.clause.text)) {
-      return fallbackResult(`fallback.compile.${input.clause.id}`, { sourceClauseId: input.clause.id, normalizedClause, interpretationSummary: "Verified minimum emergency disclosure compiled for deterministic demonstration.", rules: [correctedRule, trustedBreakGlassRule, approvedBreakGlassRule], ambiguities: [], assumptions: [] });
+    if (input.clause.id === "clause.emergency-response" && heroAmendment(input.clause.text)) {
+      return fallbackResult(`fallback.compile.${input.clause.id}`, { sourceClauseId: input.clause.id, normalizedClause, interpretationSummary: "Sample emergency repair compiled with the limited offline fallback.", rules: [correctedRule, trustedBreakGlassRule, approvedBreakGlassRule], ambiguities: [], assumptions: [] });
     }
-    throw new ProviderError("PROVIDER_INVALID_OUTPUT", "No deterministic compiler fallback exists for this clause.", false);
+    throw new ProviderError("PROVIDER_CONFIGURATION", FREEFORM_AI_UNAVAILABLE, false);
   }
 
   public async revisePolicy(input: Parameters<AiProvider["revisePolicy"]>[0]) {
+    const isSampleRevision = input.selectedRules.some((rule) => rule.id === "rule.legacy-emergency-responder-override")
+      && input.instruction.toLowerCase().includes("verified identity");
+    if (!isSampleRevision) throw new ProviderError("PROVIDER_CONFIGURATION", FREEFORM_AI_UNAVAILABLE, false);
     return fallbackResult("fallback.revise.hero-rule", { sourceRuleIds: input.selectedRules.map((rule) => rule.id), instruction: input.instruction, revisedRules: [correctedRule], changeSummary: "Requires verified responder identity and organization, credible imminent threat to life, and minimum emergency fields.", warnings: [] });
   }
 

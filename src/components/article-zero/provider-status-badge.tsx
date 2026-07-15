@@ -1,21 +1,22 @@
 "use client";
 
-import type { ApiSource } from "../../domain/api";
+import type { WorkspaceState } from "../../domain/schemas";
 import { cn } from "../../lib/cn";
 
 type ProviderStatusBadgeProps = {
-  readonly source: ApiSource | "frozen_replay";
+  readonly source: WorkspaceState["providerStatus"];
 };
 
 const LABELS = {
-  deterministic: "Deterministic",
-  groq: "Live Groq",
-  fallback: "Deterministic Fallback",
-  frozen_replay: "Frozen Replay",
+  unknown: "Provider status unknown",
+  configured: "Groq configured",
+  live: "Live Groq",
+  fallback: "Limited sample fallback",
+  error: "Provider error",
 } as const;
 
 export function ProviderStatusBadge({ source }: ProviderStatusBadgeProps) {
-  const isLive = source === "groq";
+  const isLive = source === "live";
   return (
     <span className={cn("az-provider-badge", isLive && "az-provider-badge-live")} aria-label={`Provider source: ${LABELS[source]}`}>
       <span className="az-status-dot" aria-hidden="true" />

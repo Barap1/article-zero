@@ -12,7 +12,7 @@ it("opens the constitution from the fresh briefing", () => {
   useWorkspaceStore.setState({ workspace: createSeedWorkspace(), hasHydrated: true, isHydrating: false, showBriefing: true, errorMessage: null });
 
   render(createElement(ArticleZeroCommandCenter));
-  fireEvent.click(screen.getByRole("button", { name: "Open the Constitution" }));
+  fireEvent.click(screen.getByRole("button", { name: "Open the policy workspace" }));
 
   expect(useWorkspaceStore.getState().workspace.demoStage).toBe("CONSTITUTION");
   expect(screen.getByRole("heading", { name: "Constitution workspace" })).toBeTruthy();
@@ -22,7 +22,8 @@ it("lets keyboard users move between demo stages", () => {
   useWorkspaceStore.setState({ workspace: createSeedWorkspace(), hasHydrated: true, isHydrating: false, showBriefing: false, errorMessage: null });
 
   render(createElement(ArticleZeroCommandCenter));
-  const attackStage = screen.getByRole("tab", { name: /Attack/ });
+  const attackStage = screen.getAllByRole("tab", { name: /Attack/ }).find((element) => element.id === "stage-attack");
+  if (attackStage === undefined) throw new Error("Attack stage tab missing.");
   fireEvent.keyDown(attackStage, { key: "Enter" });
 
   expect(useWorkspaceStore.getState().workspace.demoStage).toBe("ATTACK");

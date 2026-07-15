@@ -13,7 +13,7 @@ type CompileReviewProps = {
 
 function sourceLabel(source: CompileReviewProps["source"]): string {
   if (source === "groq") return "Groq";
-  if (source === "fallback") return "Deterministic fallback";
+  if (source === "fallback") return "Limited sample fallback";
   return "Deterministic source";
 }
 

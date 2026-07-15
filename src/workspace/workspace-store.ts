@@ -9,6 +9,7 @@ import { createSeedWorkspace } from "./create-seed-workspace";
 import { LocalStorageWorkspaceRepository } from "./local-storage-repository";
 import type { WorkspaceRepository } from "./repository";
 import { workspaceReducer, type ActivationTransition, type WorkspaceAction } from "./workspace-reducer";
+import { getWorkflowAvailability } from "./workflow-availability";
 
 export type WorkspaceRepositoryLike = WorkspaceRepository;
 
@@ -20,9 +21,11 @@ export type WorkspaceStore = {
   readonly errorMessage: string | null;
   readonly hydrate: () => Promise<void>;
   readonly openConstitution: () => void;
+  readonly returnHome: () => void;
   readonly setDemoStage: (stage: WorkspaceState["demoStage"]) => void;
   readonly selectClause: (clauseId: string) => void;
   readonly editClause: (clauseId: string, text: string) => void;
+  readonly editClauseTitle: (clauseId: string, title: string) => void;
   readonly addClause: () => void;
   readonly acceptCompilePreview: (clauseId: string, preview: CompilePreview) => Promise<void>;
   readonly acceptRevisionPreview: (preview: RevisionPreview) => Promise<void>;
@@ -99,12 +102,15 @@ export function createWorkspaceStore(options: CreateWorkspaceStoreOptions = {}) 
         set({ showBriefing: false });
         commit({ type: "SET_DEMO_STAGE", stage: "CONSTITUTION" });
       },
+      returnHome: () => set({ showBriefing: true }),
       setDemoStage: (stage) => {
+        if (!getWorkflowAvailability(get().workspace)[stage].available) return;
         set({ showBriefing: false });
         commit({ type: "SET_DEMO_STAGE", stage });
       },
       selectClause: (clauseId) => commit({ type: "SET_SELECTED_CLAUSE", clauseId }),
       editClause: (clauseId, text) => commit({ type: "EDIT_CLAUSE", clauseId, text }),
+      editClauseTitle: (clauseId, title) => commit({ type: "EDIT_CLAUSE_TITLE", clauseId, title }),
       addClause: () => {
         const clauseId = `clause.${createId()}`;
         commit({ type: "ADD_CLAUSE", clauseId });

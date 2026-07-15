@@ -31,13 +31,13 @@ type IncidentDetailsProps = {
 };
 
 export function SourceBadge({ source }: { readonly source: AttackRun["actionSource"] }) {
-  const label = source === "groq" ? "Groq proposal" : source === "fallback" ? "Fallback proposal" : "Frozen replay";
+  const label = source === "groq" ? "Live Groq proposal" : source === "fallback" ? "Limited sample fallback" : "Frozen replay";
   return <span className="az-source-badge" aria-label={`Action source: ${label}`}>{label}</span>;
 }
 
 export function ProposalCard({ action, source }: ProposalCardProps) {
   return <section className="az-attack-card" aria-labelledby="agent-proposal-title">
-    <div className="az-section-heading"><div><p className="az-eyebrow">Layer 2</p><h2 id="agent-proposal-title">Agent proposal</h2></div><SourceBadge source={source} /></div>
+    <div className="az-section-heading"><div><p className="az-eyebrow">Step 2 Agent proposal</p><h2 id="agent-proposal-title">Agent proposal</h2></div><SourceBadge source={source} /></div>
     <p>{action.proposalSummary}</p>
     <dl className="az-typed-action">
       <div><dt>Tool</dt><dd>{action.tool}</dd></div><div><dt>Purpose</dt><dd>{action.purpose.replaceAll("_", " ")}</dd></div><div><dt>Requested fields</dt><dd>{action.requestedFields.length}</dd></div>
@@ -54,7 +54,7 @@ function rootCauses(run: AttackRun, issues: readonly PolicyIssue[]): readonly st
 }
 
 function FieldList({ fields }: { readonly fields: readonly PatientField[] }) {
-  return <ul className="az-field-list">{fields.map((field) => <li key={field}>{FIELD_LABELS[field]}</li>)}</ul>;
+  return <ul className="az-field-list">{fields.length === 0 ? <li>None</li> : fields.map((field) => <li key={field}>{FIELD_LABELS[field]}</li>)}</ul>;
 }
 
 export function IncidentDetails({ run, issues, highlightedRuleIds, onHighlightRules, onAmend }: IncidentDetailsProps) {
@@ -65,20 +65,16 @@ export function IncidentDetails({ run, issues, highlightedRuleIds, onHighlightRu
   const causes = rootCauses(run, issues);
   const transition = reduceMotion ? { duration: 0 } : { duration: 0.24, ease: "easeOut" as const };
 
-  return <AnimatePresence mode="wait">
-    {isBreach ? <motion.section key="breach" className="az-incident az-incident-breach" role="alert" aria-labelledby="policy-breach-title" initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} transition={transition}>
-      <p className="az-eyebrow">Layer 4 · simulated hospital-tool result</p><h2 id="policy-breach-title">Policy breach</h2><p>The legacy policy allowed a full-record disclosure to an unverified requester.</p>
-      <section className="az-field-comparison" aria-labelledby="field-comparison-title"><h3 id="field-comparison-title">Requested, disclosed, and withheld fields</h3><div><section><h4>Requested</h4><FieldList fields={run.decision.requestedFields} /></section><section><h4>Disclosed</h4><FieldList fields={run.toolResult?.exposedPatientFields ?? []} /></section><section><h4>Withheld</h4>{run.decision.deniedFields.length > 0 ? <FieldList fields={run.decision.deniedFields} /> : <p>None</p>}</section></div></section>
-      <div className="az-disclosure-grid"><section><h3>Emergency-relevant disclosure</h3><FieldList fields={emergencyFields} /></section><section><h3>Excessive private disclosure</h3><FieldList fields={excessiveFields} /></section></div>
-      <section className="az-root-causes" aria-labelledby="root-cause-title"><h3 id="root-cause-title">Deterministic root causes</h3><ul>{causes.map((cause) => <li key={cause}>{cause}</li>)}</ul></section>
-      <TraceTimeline run={run} highlightedRuleIds={highlightedRuleIds} onHighlightRules={onHighlightRules} />
-      <button type="button" className="az-button az-button-primary" onClick={onAmend}>Amend the Constitution</button>
-    </motion.section> : <motion.section key="denial" className="az-incident az-incident-denial" role="status" aria-live="polite" aria-labelledby="policy-denial-title" initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} transition={transition}>
-      <p className="az-eyebrow">Layer 4 · simulated hospital-tool result</p><h2 id="policy-denial-title">Disclosure prevented</h2><p>{run.decision.humanExplanation}</p><TraceTimeline run={run} highlightedRuleIds={highlightedRuleIds} onHighlightRules={onHighlightRules} />
-    </motion.section>}
-  </AnimatePresence>;
+  return <AnimatePresence mode="wait"><motion.section key={isBreach ? "breach" : "denial"} className={isBreach ? "az-incident az-incident-breach" : "az-incident az-incident-denial"} role={isBreach ? "alert" : "status"} aria-live="polite" aria-labelledby="incident-result-title" initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }} animate={{ opacity: 1, y: 0 }} transition={transition}>
+    <p className="az-eyebrow">Step 4 Enforced result · simulated hospital-tool result</p><h2 id="incident-result-title">{isBreach ? "Policy breach" : "Disclosure prevented"}</h2><p>{isBreach ? "The enforced result disclosed more than the emergency minimum to an unverified requester." : run.decision.humanExplanation}</p>
+    <section className="az-field-comparison" aria-labelledby="field-comparison-title"><h3 id="field-comparison-title">Requested, disclosed, and withheld fields</h3><div><section><h4>Requested</h4><FieldList fields={run.decision.requestedFields} /></section><section><h4>Disclosed</h4><FieldList fields={run.toolResult?.exposedPatientFields ?? []} /></section><section><h4>Withheld</h4><FieldList fields={run.decision.deniedFields} /></section></div></section>
+    <div className="az-disclosure-grid"><section><h3>Emergency-relevant disclosure</h3><FieldList fields={emergencyFields} /></section><section><h3>Excessive private disclosure</h3><FieldList fields={excessiveFields} /></section></div>
+    <section className="az-root-causes" aria-labelledby="root-cause-title"><h3 id="root-cause-title">Root causes</h3>{causes.length > 0 ? <ul>{causes.map((cause) => <li key={cause}>{cause}</li>)}</ul> : <p>No policy defect was detected for this run.</p>}</section>
+    <TraceTimeline run={run} highlightedRuleIds={highlightedRuleIds} onHighlightRules={onHighlightRules} />
+    <button type="button" className="az-button az-button-primary" onClick={onAmend}>Create amendment</button>
+  </motion.section></AnimatePresence>;
 }
 
 function TraceTimeline({ run, highlightedRuleIds, onHighlightRules }: Pick<IncidentDetailsProps, "run" | "highlightedRuleIds" | "onHighlightRules">) {
-  return <section className="az-trace" aria-labelledby="policy-trace-title"><div className="az-section-heading"><div><p className="az-eyebrow">Layer 3</p><h3 id="policy-trace-title">Deterministic policy trace</h3></div><span className="az-help-text">Rule evaluations, not model reasoning.</span></div><ol>{run.decision.trace.map((step) => <li key={step.id} className={step.relatedRuleIds.some((id) => highlightedRuleIds.includes(id)) ? "az-trace-step az-trace-step-active" : "az-trace-step"}><button type="button" onClick={() => onHighlightRules(step.relatedRuleIds)} aria-pressed={step.relatedRuleIds.some((id) => highlightedRuleIds.includes(id))}><span>{step.order}</span><strong>{step.title}</strong><small>{step.detail}</small></button></li>)}</ol></section>;
+  return <section className="az-trace" aria-labelledby="policy-trace-title"><div className="az-section-heading"><div><p className="az-eyebrow">Decision trace</p><h3 id="policy-trace-title">Decision trace</h3></div><span className="az-help-text">Deterministic rule checks at the tool boundary, not hidden model reasoning.</span></div><ol>{run.decision.trace.map((step) => <li key={step.id} className={step.relatedRuleIds.some((id) => highlightedRuleIds.includes(id)) ? "az-trace-step az-trace-step-active" : "az-trace-step"}><button type="button" onClick={() => onHighlightRules(step.relatedRuleIds)} aria-pressed={step.relatedRuleIds.some((id) => highlightedRuleIds.includes(id))}><span>{step.order}</span><strong>{step.title}</strong><small>{step.detail}</small></button></li>)}</ol></section>;
 }

@@ -57,10 +57,37 @@ it("shows the fallback source and requires review before applying compiled rules
   await user.click(screen.getByRole("button", { name: /Emergency Assistance/ }));
   await user.click(screen.getByRole("button", { name: "Compile clause" }));
 
-  expect(await screen.findByText("Deterministic fallback")) .toBeTruthy();
+  expect(await screen.findByText("Limited sample fallback")) .toBeTruthy();
   expect(screen.getByText("Added rules")).toBeTruthy();
   expect(useWorkspaceStore.getState().workspace.versions.find((version) => version.id === "version.draft-v1-1")?.clauses.find((clause) => clause.id === "clause.emergency-response")?.lastCompiledText).toBeNull();
 
   await user.click(screen.getByRole("button", { name: "Accept compiled policy" }));
   await waitFor(() => expect(useWorkspaceStore.getState().workspace.versions.find((version) => version.id === "version.draft-v1-1")?.clauses.find((clause) => clause.id === "clause.emergency-response")?.lastCompiledText).toBe("Verified responders receive only minimum emergency information."));
+});
+
+it("navigates articles and edits the selected article title", async () => {
+  const user = userEvent.setup();
+  useWorkspaceStore.setState({ workspace: createSeedWorkspace(), hasHydrated: true, isHydrating: false, showBriefing: false, errorMessage: null });
+  render(<ConstitutionWorkspace />);
+
+  expect(screen.getByRole("heading", { name: "Patient Privacy" })).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Next article" }));
+
+  expect(screen.getByRole("heading", { name: "Clinical Care" })).toBeTruthy();
+  await user.clear(screen.getByLabelText("Clause title"));
+  await user.type(screen.getByLabelText("Clause title"), "Treatment access");
+  expect(useWorkspaceStore.getState().workspace.versions.find((version) => version.id === "version.draft-v1-1")?.clauses[1]?.title).toBe("Treatment access");
+
+  await user.click(screen.getByRole("button", { name: "Previous article" }));
+  expect(screen.getByRole("heading", { name: "Patient Privacy" })).toBeTruthy();
+});
+
+it("offers structured review after the final article", async () => {
+  const user = userEvent.setup();
+  useWorkspaceStore.setState({ workspace: createSeedWorkspace(), hasHydrated: true, isHydrating: false, showBriefing: false, errorMessage: null });
+  render(<ConstitutionWorkspace />);
+
+  await user.click(screen.getByRole("button", { name: /Auditability/ }));
+  await user.click(screen.getByRole("button", { name: "Next article" }));
+  expect(screen.getByRole("button", { name: "Review structured policy" })).toBeTruthy();
 });

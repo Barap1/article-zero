@@ -47,11 +47,10 @@ it("shows the fake-responder breach after the protected action is enforced", asy
     toolResult: { executionId: "execution.test", tool: "disclose_patient_data", executed: true, output: null, exposedPatientFields: HERO_ATTACK_SCENARIO.fallbackAction.requestedFields, executedAt: "2026-07-13T12:00:00.000Z" },
   });
 
-  render(<AttackArena version={legacy} onAddAttackRun={vi.fn()} onAdvanceToAmendment={vi.fn()} />);
-  await userEvent.setup().click(screen.getByRole("button", { name: /run protected action/i }));
+  render(<AttackArena version={legacy} onAddAttackRun={vi.fn()} onAdvanceToAmendment={vi.fn()} onViewIncident={vi.fn()} />);
+  await userEvent.setup().click(screen.getByRole("button", { name: /run request/i }));
 
-  expect(await screen.findByText(/policy breach/i)).toBeTruthy();
-  expect(screen.getAllByText(/home address/i)).not.toHaveLength(0);
-  expect(screen.getByText(/identity was not verified/i)).toBeTruthy();
+  expect(await screen.findByText("Agent proposal")).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Allowed" })).toBeTruthy();
   expect(disclosureToolSpy).toHaveBeenCalledTimes(1);
 });

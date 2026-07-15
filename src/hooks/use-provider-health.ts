@@ -11,10 +11,10 @@ export function useProviderHealth(enabled: boolean) {
   const operation = useCallback(async () => {
     try {
       const response = await apiClient.health();
-      setProviderStatus(response.data.groqConfigured ? "live" : "fallback");
+      setProviderStatus(response.data.groqConfigured ? "configured" : "fallback");
       return response.data;
     } catch (error) {
-      setProviderStatus("fallback");
+      setProviderStatus("error");
       throw error;
     }
   }, [setProviderStatus]);

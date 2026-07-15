@@ -39,3 +39,11 @@ it("prevents duplicate hydration work while the repository is loading", async ()
 
   expect(store.getState().hasHydrated).toBe(true);
 });
+
+it("blocks direct navigation to a stage whose prerequisites are missing", () => {
+  const store = createWorkspaceStore({ seedFactory: createSeedWorkspace });
+
+  store.getState().setDemoStage("REPLAY");
+
+  expect(store.getState().workspace.demoStage).toBe("CONSTITUTION");
+});

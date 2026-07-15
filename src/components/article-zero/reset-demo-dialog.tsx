@@ -35,11 +35,11 @@ export function ResetDemoDialog({ open, isResetting, onCancel, onConfirm }: Rese
     <div className="az-dialog-backdrop" role="presentation">
       <div className="az-dialog" role="dialog" aria-modal="true" aria-labelledby="reset-demo-title" ref={dialogRef}>
         <span className="az-dialog-kicker">Reset workspace</span>
-        <h2 id="reset-demo-title">Return to the clean demo?</h2>
-        <p>This removes local edits, attack runs, test runs, and audit events from this browser. The seeded legacy baseline will be restored.</p>
+        <h2 id="reset-demo-title">Start a fresh sample workspace?</h2>
+        <p>This removes local edits, attack runs, test runs, and audit events from this browser. The seeded policy workspace will be restored.</p>
         <div className="az-dialog-actions">
           <button className="az-button az-button-secondary" type="button" onClick={onCancel} disabled={isResetting}>Keep workspace</button>
-          <button className="az-button az-button-danger" type="button" onClick={onConfirm} disabled={isResetting}>{isResetting ? "Resetting…" : "Reset demo"}</button>
+          <button className="az-button az-button-danger" type="button" onClick={onConfirm} disabled={isResetting}>{isResetting ? "Resetting…" : "Reset workspace"}</button>
         </div>
       </div>
     </div>

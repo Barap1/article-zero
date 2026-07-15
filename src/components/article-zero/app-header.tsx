@@ -14,12 +14,6 @@ type AppHeaderProps = {
   readonly isExporting: boolean;
 };
 
-function providerSource(status: WorkspaceState["providerStatus"]): "deterministic" | "groq" | "fallback" {
-  if (status === "live") return "groq";
-  if (status === "fallback") return "fallback";
-  return "deterministic";
-}
-
 export function AppHeader({ workspace, onReset, onExport, onOpenAudit, isExporting }: AppHeaderProps) {
   const activeVersion = workspace.versions.find((version) => version.id === workspace.activeVersionId);
   const legacyRisk = activeVersion?.status === "LEGACY_UNSAFE_BASELINE";
@@ -39,7 +33,7 @@ export function AppHeader({ workspace, onReset, onExport, onOpenAudit, isExporti
           <span className={legacyRisk ? "az-version-badge az-version-risk" : "az-version-badge"}>{activeVersion?.label ?? "Unavailable"}</span>
           {legacyRisk && <span className="az-risk-label">Legacy risk</span>}
         </div>
-        <ProviderStatusBadge source={providerSource(workspace.providerStatus)} />
+        <ProviderStatusBadge source={workspace.providerStatus} />
         <span className="az-synthetic-context"><span className="az-status-dot az-status-dot-synthetic" aria-hidden="true" />Synthetic data only</span>
         <div className="az-header-actions">
           <button className="az-button az-button-quiet" type="button" onClick={onOpenAudit}><ClipboardList size={15} aria-hidden="true" />Audit timeline</button>
@@ -49,7 +43,7 @@ export function AppHeader({ workspace, onReset, onExport, onOpenAudit, isExporti
           </button>
           <button className="az-button az-button-quiet" type="button" onClick={onReset}>
             <RotateCcw size={15} aria-hidden="true" />
-            Reset demo
+            Reset workspace
           </button>
         </div>
       </div>

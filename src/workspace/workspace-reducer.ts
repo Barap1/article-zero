@@ -6,6 +6,7 @@ export type ActivationTransition = { readonly workspace: WorkspaceState };
 
 export type WorkspaceAction =
   | { readonly type: "EDIT_CLAUSE"; readonly clauseId: string; readonly text: string }
+  | { readonly type: "EDIT_CLAUSE_TITLE"; readonly clauseId: string; readonly title: string }
   | { readonly type: "ADD_CLAUSE"; readonly clauseId: string }
   | { readonly type: "ACCEPT_COMPILE_PREVIEW"; readonly clauseId: string; readonly preview: CompilePreview; readonly bundleHash: string }
   | { readonly type: "ACCEPT_REVISION_PREVIEW"; readonly preview: RevisionPreview; readonly bundleHash: string }
@@ -42,6 +43,8 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction,
   switch (action.type) {
     case "EDIT_CLAUSE":
       return updateDraft(state, (draft) => updateClause(draft, action.clauseId, (clause) => ({ ...clause, text: action.text, source: "user", status: "dirty", lastCompiledText: null })), idFactory);
+    case "EDIT_CLAUSE_TITLE":
+      return updateDraft(state, (draft) => updateClause(draft, action.clauseId, (clause) => ({ ...clause, title: action.title, source: "user", status: "dirty", lastCompiledText: null })), idFactory);
     case "ADD_CLAUSE":
       return updateDraft(state, (draft) => {
         const articleNumber = Math.max(...draft.clauses.map((clause) => clause.articleNumber), 0) + 1;
