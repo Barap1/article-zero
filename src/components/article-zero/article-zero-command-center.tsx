@@ -76,7 +76,7 @@ export function ArticleZeroCommandCenter() {
   };
 
   if (!hasHydrated || isHydrating) {
-    return <main className="az-shell az-shell-loading"><div className="az-loading-mark" aria-hidden="true" /><p role="status">Restoring the local workspace…</p></main>;
+    return <main className="az-shell az-shell-loading"><a className="az-skip-link" href="#article-zero-main">Skip to command surface</a><div className="az-loading-mark" aria-hidden="true" /><p role="status">Restoring the local workspace…</p></main>;
   }
 
   const activeVersion = workspace.versions.find((version) => version.id === workspace.activeVersionId);

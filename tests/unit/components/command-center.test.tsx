@@ -24,6 +24,7 @@ it("lets keyboard users move between demo stages", () => {
   render(createElement(ArticleZeroCommandCenter));
   const attackStage = screen.getAllByRole("tab", { name: /Attack/ }).find((element) => element.id === "stage-attack");
   if (attackStage === undefined) throw new Error("Attack stage tab missing.");
+  expect(screen.getAllByRole("tab", { name: /attack/i })).toHaveLength(1);
   fireEvent.keyDown(attackStage, { key: "Enter" });
 
   expect(useWorkspaceStore.getState().workspace.demoStage).toBe("ATTACK");

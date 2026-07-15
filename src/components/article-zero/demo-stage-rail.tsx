@@ -51,6 +51,7 @@ export function DemoStageRail({ activeStage, workspace, onStageChange }: DemoSta
               id={`stage-${stage.toLowerCase()}`}
               aria-selected={selected}
               aria-controls={`stage-panel-${stage.toLowerCase()}`}
+              aria-label={formatDisplayLabel(stage)}
               tabIndex={selected ? 0 : -1}
               title={stageState.reason ?? undefined}
               onClick={() => onStageChange(stage)}
