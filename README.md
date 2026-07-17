@@ -1,83 +1,124 @@
 # Article Zero
 
-Article Zero is a calm, inspectable workspace for authoring and enforcing policy around hospital-agent actions. It turns human-readable constitutional clauses into typed rules, lets a reviewer inspect every proposed change, and proves the result at a deterministic tool boundary.
+**Turn plain-language AI policies into enforceable controls—and test them before they govern an agent.**
 
-It is a product prototype for policy design and replayable evaluation. It is not a clinical system, emergency service, compliance certification, or source of patient guidance.
+Article Zero is a policy-authoring and enforcement prototype for AI agents. It lets a user write policy in natural language, compiles that policy into a typed rule set, enforces the rules at the tool boundary, and stress-tests the result with replayable adversarial scenarios.
 
-## The problem
+The current prototype uses a fully synthetic hospital emergency-disclosure scenario to demonstrate the core idea:
 
-An agent can produce a plausible request while still asking for too much data. A useful policy workflow must keep three things distinct:
+> AI policy should be easy for people to write, transparent enough to inspect, and reliable enough to enforce.
 
-1. The human clause that describes the intent.
-2. The typed agent proposal that describes the requested action.
-3. The deterministic enforcement result that decides what the synthetic tool may do.
+## Demo
+[article--zero.vercel.app](article--zero.vercel.app)
 
-Article Zero makes those boundaries visible and reviewable instead of hiding them in a chat transcript.
+## Why Article Zero
 
-## How it works
+Most AI-agent policies live inside prompts. That makes them difficult to audit, easy to interpret inconsistently, and unreliable as a security boundary.
+
+Article Zero separates **AI interpretation** from **policy enforcement**:
 
 ```text
-human clause
-    -> typed compile proposal
-    -> structured policy review
-    -> synthetic agent request
-    -> deterministic policy decision
-    -> enforced tool result + audit event
-    -> amendment, tests, activation, and replay
+Plain-language policy
+        ↓
+Groq-assisted structured compilation
+        ↓
+Human review and approval
+        ↓
+Deterministic policy engine
+        ↓
+Allow · Deny · Filter fields · Require approval
+        ↓
+Audit trail and replayable tests
 ```
 
-The sample workspace starts with a deliberately unsafe emergency disclosure rule. You can run the synthetic request, inspect the incident, amend the clause, compile and accept the typed preview, run the regression gate, activate the draft, and replay the same request against the safer version.
+The language model proposes structured rules. It does **not** make the final enforcement decision.
+
+## Core capabilities
+
+- **Plain-language policy authoring** with editable constitutional clauses
+- **Structured policy compilation** using Groq and strict output validation
+- **Visual and form-based policy review** before changes are accepted
+- **Deterministic enforcement** for every protected tool action
+- **Field-level disclosure controls** for minimum-necessary access
+- **Adversarial testing** with synthetic responder scenarios
+- **Regression-gated activation** so unsafe policy versions cannot go live
+- **Exact attack replay** to prove whether an amendment fixed the failure
+- **Human approval workflows** for ambiguous or break-glass situations
+- **Versioned local workspaces** and exportable audit history
+
+## Demonstration flow
+
+The seeded scenario begins with an unsafe emergency-access rule.
+
+1. An unverified responder requests a patient's full record.
+2. The agent proposes a typed disclosure action.
+3. The legacy policy permits excessive disclosure.
+4. Article Zero explains the exact rule path that caused the breach.
+5. The user amends the policy in plain language.
+6. Groq compiles the amendment into structured rules.
+7. Regression tests must pass before the new version can be activated.
+8. The identical attack is replayed and denied.
+9. A verified responder receives only the minimum emergency fields.
+
+All identities, records, credentials, incidents, and outcomes are fictional.
 
 ## Architecture
 
 ```text
-src/domain          strict Zod schemas and closed catalogs
-src/policy-engine   pure rule resolution, evaluation, analysis, and hashing
-src/ai              server-only Groq provider and bounded sample fallback
-src/hospital        synthetic fixtures and simulated protected tools
-src/activation      deterministic regression and activation gate
-src/workspace       immutable transitions and browser-local persistence
-src/components      workflow presentation and typed dispatch
+Next.js interface
+├── Constitution and policy authoring
+├── Attack, incident, testing, and replay workflows
+└── Local versioned workspace
+        │
+        ├── Groq policy intelligence
+        │   ├── Compile natural-language clauses
+        │   ├── Revise selected rules
+        │   └── Normalize agent actions
+        │
+        ├── Deterministic policy engine
+        │   ├── Three-valued condition evaluation
+        │   ├── Priority and conflict resolution
+        │   ├── Field allowlists
+        │   └── Approval fallbacks
+        │
+        └── Simulated hospital tool gateway
+            ├── Execute permitted actions
+            ├── Block prohibited actions
+            └── Record audit events
 ```
 
-The client never receives `GROQ_API_KEY`, model-generated code, arbitrary tool names, or chain-of-thought. Model output is validated as typed data before it can become a preview. Every protected action is routed through the enforcement gateway.
+The Groq API key remains server-side. Protected tools can only execute after the deterministic policy gateway returns an executable decision.
 
-## Product surface
+## Tech stack
 
-- Human policy authoring with editable article titles and text.
-- Typed compile previews with explicit accept or reject decisions.
-- Summary-first structured policy review with closed catalogs, findings, revision previews, raw JSON, and a keyboard-operable policy graph.
-- Bounded synthetic attack scenarios with editable request wording.
-- Distinct incident evidence showing requested, disclosed, and withheld fields plus a deterministic decision trace.
-- Focused amendment workspace that does not silently edit the original clause.
-- Regression testing, activation blocking, frozen replay, optional approval control, and an exportable audit timeline.
-- Browser-local persistence so a return home keeps the current work.
+- **Framework:** Next.js 15, React 19, TypeScript
+- **Styling:** Tailwind CSS
+- **State:** Zustand with browser-local persistence
+- **Validation:** Zod
+- **AI:** Groq SDK with structured JSON outputs
+- **Policy visualization:** React Flow
+- **Motion:** Motion for React
+- **Testing:** Vitest, Testing Library, Playwright
+- **Deployment:** Vercel-compatible, stateless architecture
 
-## Local setup
+## Getting started
 
-Requirements: Node.js 22 LTS or newer and pnpm 10 or newer.
+### Prerequisites
 
-PowerShell:
+- Node.js 22 or newer
+- pnpm 10 or newer
+- A Groq API key for live policy compilation
+
+### Install
 
 ```powershell
+git clone https://github.com/Barap1/archive-zero.git
+Set-Location archive-zero
 pnpm install
 Copy-Item .env.example .env.local
-pnpm dev
 ```
 
-macOS or Linux:
-
-```bash
-pnpm install
-cp .env.example .env.local
-pnpm dev
-```
-
-Open `http://localhost:3000`.
-
-### Groq setup
-
-`GROQ_API_KEY` is optional. To enable live compilation and revision, set it only in the server-side `.env.local` file:
+Open `.env.local` and add your Groq key:
 
 ```dotenv
 GROQ_API_KEY=gsk_your_key_here
@@ -87,48 +128,45 @@ GROQ_REQUEST_TIMEOUT_MS=8000
 DEMO_FALLBACKS_ENABLED=true
 ```
 
-Never use a `NEXT_PUBLIC_` prefix for the key, commit `.env.local`, or expose server modules from a client component. The interface reports Groq as live only after an operation actually returns a Groq result.
-
-### Fallback limitation
-
-Without a valid key, manual structured editing remains available. The deterministic fallback is intentionally limited to the documented emergency sample workflow. It is not a general freeform compiler and should not be treated as one. The UI labels fallback and frozen-replay results explicitly.
-
-## Commands
+Then start the development server:
 
 ```powershell
-pnpm dev                 # local development
-pnpm lint                # ESLint with zero warnings
-pnpm typecheck           # strict TypeScript check
-pnpm test                # unit and integration tests
-pnpm test:e2e            # Playwright workflow checks
-pnpm build               # production build
-pnpm check:boundaries    # client/server import boundaries
-pnpm check:assets        # generated asset checks
-pnpm verify              # release gate: lint, types, tests, boundaries, assets, build
+pnpm dev
 ```
 
-## Sample workflow
+Open `http://localhost:3000`.
 
-1. Open the sample policy workspace and review the legacy clause.
-2. Run the fake-responder scenario and open its incident.
-3. Create an amendment, edit or apply the suggested repair, compile a preview, and accept it explicitly.
-4. Run the regression suite and resolve the deterministic activation gate.
-5. Activate the tested draft.
-6. Replay the frozen fake request and confirm it is blocked.
-7. Run the verified-responder control and confirm minimum-field disclosure.
-8. Optionally run the human-approval branch, then inspect or export the audit timeline.
 
-## Vercel deployment
+## Project structure
 
-Create a Vercel project from this repository. In Project Settings, add `GROQ_API_KEY` to the Preview and/or Production environments that need live AI compilation. Add the optional `GROQ_POLICY_MODEL`, `GROQ_FAST_MODEL`, `GROQ_REQUEST_TIMEOUT_MS`, and `DEMO_FALLBACKS_ENABLED` variables only when overriding `.env.example`. Redeploy after changing environment variables. The bounded sample flow works without a database or a Groq key.
+```text
+src/
+├── activation/       # Test-gated policy activation
+├── ai/               # Groq provider, prompts, schemas, and fallbacks
+├── app/              # Next.js pages and API routes
+├── components/       # Product workflows and interface components
+├── domain/           # Shared schemas, catalogs, and API contracts
+├── hospital/         # Synthetic fixtures and protected tool gateway
+├── policy-engine/    # Deterministic evaluation and analysis
+├── red-team/         # Frozen replay behavior
+└── workspace/        # Versioning, persistence, and state transitions
 
-## Synthetic data and security boundary
+tests/
+├── unit/
+└── e2e/
+```
 
-Every identity, patient, address, credential, hospital, and outcome in this repository is synthetic. Do not connect it to a real hospital, real patient record, real credential, or emergency service. The project does not claim clinical readiness or regulatory compliance. Treat all model and attacker text as untrusted plain text, keep policy decisions deterministic, and preserve the server-only key boundary.
 
 ## Roadmap
 
-- Improve authoring ergonomics while keeping the policy catalog closed and reviewable.
-- Add stronger scenario coverage and richer deterministic trace inspection.
-- Add a managed persistence layer only after the policy and data boundaries are proven.
-- Add authentication and operational integrations only with explicit security and governance work.
+Near-term directions include:
+
+- User-defined agent tools and policy catalogs
+- Multiple domain templates beyond healthcare
+- Durable team workspaces and role-based approvals
+- Expanded adversarial test generation
+- Policy import, export, and reusable organization templates
+- CI-based policy regression testing
+- Signed policy versions and stronger audit integrity
+
+#### Built for Hoobit Hacks 2026
