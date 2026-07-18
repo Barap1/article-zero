@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { PATIENT_FIELDS } from "../../../src/domain/catalogs";
 import type { PolicyBundle, PolicyCondition, PolicyRule } from "../../../src/domain/schemas";
 import { CORRECTED_POLICY_BUNDLE, LEGACY_POLICY_BUNDLE } from "../../../src/hospital/fixtures/constitution";
 import { analyzePolicyBundle } from "../../../src/policy-engine/analyze-policy-bundle";
@@ -101,8 +102,10 @@ describe("analyzePolicyBundle", () => {
     expectIssue("UNVERIFIED_EMERGENCY_OVERRIDE", LEGACY_POLICY_BUNDLE);
   });
 
-  it("reports BREAK_GLASS_TOO_BROAD", () => {
-    expectIssue("BREAK_GLASS_TOO_BROAD", CORRECTED_POLICY_BUNDLE);
+  it("reports BREAK_GLASS_TOO_BROAD for a break-glass rule with full-record fields", () => {
+    const breakGlassRule = CORRECTED_POLICY_BUNDLE.rules.find((rule) => rule.id === "rule.corrected-break-glass");
+    if (breakGlassRule === undefined) throw new Error("corrected break-glass rule is missing");
+    expectIssue("BREAK_GLASS_TOO_BROAD", bundle([{ ...breakGlassRule, allowedFields: [...PATIENT_FIELDS] }]));
   });
 
   it("reports NO_MINIMUM_DISCLOSURE", () => {

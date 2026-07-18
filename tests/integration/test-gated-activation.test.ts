@@ -3,6 +3,7 @@ import { expect, it } from "vitest";
 import { activateConstitution } from "../../src/activation/activate-constitution";
 import { runRegressionSuite } from "../../src/activation/run-regression-suite";
 import { SEEDED_REGRESSION_CASES } from "../../src/activation/seeded-regression-cases";
+import { CORRECTED_POLICY_BUNDLE } from "../../src/hospital/fixtures/constitution";
 import { hashPolicyBundle } from "../../src/policy-engine/hash-policy-bundle";
 import { createSeedWorkspace } from "../../src/workspace/create-seed-workspace";
 import { workspaceReducer } from "../../src/workspace/workspace-reducer";
@@ -12,8 +13,8 @@ it("Given a current passing test run, When activation succeeds and its transitio
   const workspace = createSeedWorkspace();
   const draft = workspace.versions.find((version) => version.id === workspace.draftVersionId);
   if (!draft) throw new Error("draft seed version is missing");
-  const bundleHash = await hashPolicyBundle(draft.policyBundle);
-  const version = { ...draft, bundleHash };
+  const bundleHash = await hashPolicyBundle(CORRECTED_POLICY_BUNDLE);
+  const version = { ...draft, policyBundle: CORRECTED_POLICY_BUNDLE, bundleHash };
   const testRun = await runRegressionSuite({ version, cases: SEEDED_REGRESSION_CASES, now, idFactory: () => "test-run" });
   const readyWorkspace = { ...workspace, versions: workspace.versions.map((candidate) => candidate.id === version.id ? version : candidate), testRuns: [testRun] };
 

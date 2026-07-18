@@ -175,10 +175,28 @@ input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--az-accen
 .az-revision-card { margin-top: 1rem; }
 .az-revision-card textarea { min-height: 5rem; }
 .az-review-card { margin-top: 1rem; border-left: 5px solid var(--az-accent); }
-.az-policy-diff { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: .8rem; }
-.az-policy-diff > * { border: 1px solid var(--az-line); padding: .75rem; background: var(--az-paper); }
-.az-policy-diff del { color: #842f26; }
-.az-policy-diff ins { color: #15534b; text-decoration: none; }
+.az-policy-diff { display: grid; gap: .75rem; min-width: 0; margin-top: .8rem; }
+.az-policy-diff > * { min-width: 0; border: 1px solid var(--az-line); padding: .75rem; background: var(--az-paper); }
+.az-policy-changed-rule, .az-policy-field-changes, .az-policy-field-change, .az-policy-field-values, .az-policy-field-value { min-width: 0; }
+.az-policy-changed-rule h4 { min-width: 0; margin: 0; overflow-wrap: normal; word-break: normal; }
+.az-policy-field-changes { display: grid; gap: .65rem; margin: .65rem 0 0; padding: 0; list-style: none; }
+.az-policy-field-change { display: grid; gap: .55rem; border-top: 1px solid var(--az-line); padding-top: .65rem; }
+.az-policy-field-change h5 { margin: 0; color: var(--az-ink); font-size: .8rem; }
+.az-policy-field-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+.az-policy-field-value { display: grid; align-content: start; gap: .3rem; min-height: 3.2rem; border: 1px solid var(--az-line); padding: .55rem; background: var(--az-surface); }
+.az-policy-before { border-left: 3px solid var(--az-danger); }
+.az-policy-after { border-left: 3px solid var(--az-accent); }
+.az-policy-value-label { color: var(--az-muted); font-size: .65rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.az-policy-value-text { min-width: 0; color: var(--az-ink); line-height: 1.4; overflow-wrap: normal; word-break: normal; }
+.az-policy-machine-value { min-width: 0; overflow-wrap: anywhere; }
+.az-policy-value-list, .az-policy-condition-list { display: grid; gap: .3rem; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.az-policy-value-list { display: flex; flex-wrap: wrap; }
+.az-policy-value-chip { max-width: 100%; border: 1px solid var(--az-line-strong); padding: .25rem .4rem; background: var(--az-paper); }
+.az-policy-condition { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem .7rem; min-width: 0; border: 1px solid var(--az-line); padding: .5rem; background: var(--az-paper); }
+.az-policy-condition > div { display: grid; min-width: 0; gap: .15rem; }
+.az-policy-raw-value { min-width: 0; border-top: 1px solid var(--az-line); }
+.az-policy-raw-value summary { width: fit-content; margin-top: .35rem; color: var(--az-muted); cursor: pointer; font-size: .68rem; font-weight: 800; }
+.az-policy-raw-value pre { max-width: 100%; overflow: auto; margin: .45rem 0 0; border: 1px solid var(--az-line-strong); padding: .65rem; color: #e9e5da; background: var(--az-ink); font-family: var(--az-mono); font-size: .68rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
 .az-raw-json { margin-top: 1rem; border: 1px solid var(--az-line-strong); background: var(--az-surface); }
 .az-raw-json summary { min-height: 2.75rem; padding: .75rem; cursor: pointer; font-size: .76rem; font-weight: 800; }
 .az-raw-json pre { max-width: 100%; overflow: auto; margin: 0; border-top: 1px solid var(--az-line); padding: 1rem; color: #e9e5da; background: var(--az-ink); font-size: .69rem; line-height: 1.55; }
@@ -332,7 +350,7 @@ input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--az-accen
   .az-main-surface { padding: 1rem; }
   .az-briefing { min-height: 36rem; padding: 2rem 1.4rem; }
   .az-briefing h1 { font-size: clamp(3rem, 15vw, 4.4rem); }
-  .az-briefing-grid, .az-authoring-grid, .az-attack-layers, .az-replay-grid, .az-policy-diff, .az-field-comparison > div, .az-disclosure-grid, .az-amendment-grid, .az-completion-grid, .az-remediation-facts, .az-mental-model { grid-template-columns: 1fr; }
+  .az-briefing-grid, .az-authoring-grid, .az-attack-layers, .az-replay-grid, .az-policy-diff, .az-field-comparison > div, .az-disclosure-grid, .az-amendment-grid, .az-completion-grid, .az-remediation-facts, .az-mental-model, .az-policy-field-values, .az-policy-condition { grid-template-columns: 1fr; }
   .az-panel-header { align-items: flex-start; flex-direction: column; }
   .az-clause-list { max-height: 22rem; overflow: auto; }
   .az-rule-basics, .az-condition-row, .az-checkbox-grid, .az-policy-issues, .az-trace ol, .az-graph-list ul { grid-template-columns: 1fr; }

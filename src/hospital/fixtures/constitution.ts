@@ -14,9 +14,85 @@ export const SEED_CLAUSES: readonly ConstitutionClause[] = [
 const defaults = { noMatchingRuleForCriticalTool: "DENY", noMatchingRuleForHighRiskTool: "REQUIRE_HUMAN_APPROVAL", noMatchingRuleForLowRiskTool: "DENY", equalPriorityConflict: "MOST_RESTRICTIVE", emptyFilteredDisclosure: "DENY" } as const;
 const legacyRule: PolicyRule = { id: "rule.legacy-emergency-responder-override", sourceClauseId: "clause.emergency-response", name: "Legacy emergency responder override", description: "An imminent emergency allows an emergency responder to disclose the complete record.", priority: 90, appliesToTools: ["disclose_patient_data"], conditionMode: "ALL", conditions: [{ id: "condition.legacy-imminent", fact: "emergency.imminent", operator: "EQUALS", value: true, label: "Emergency is imminent" }], effect: "ALLOW", allowedFields: [...PATIENT_FIELDS], onIndeterminate: "DENY", overridesRuleIds: [], severity: "critical", enabled: true };
 const correctedRules: PolicyRule[] = [
-  { id: "rule.corrected-verified-minimum-disclosure", sourceClauseId: "clause.emergency-response", name: "Verified responder minimum disclosure", description: "A credible emergency permits only the minimum stabilization fields for a verified responder.", priority: 90, appliesToTools: ["disclose_patient_data"], conditionMode: "ALL", conditions: [{ id: "condition.corrected-credible", fact: "emergency.credible", operator: "EQUALS", value: true, label: "Emergency is credible" }, { id: "condition.corrected-identity", fact: "actor.identityVerified", operator: "EQUALS", value: true, label: "Responder identity is verified" }, { id: "condition.corrected-organization", fact: "actor.organizationVerified", operator: "EQUALS", value: true, label: "Responder organization is verified" }], effect: "ALLOW_WITH_FIELD_FILTER", allowedFields: [...MINIMUM_EMERGENCY_FIELDS], onIndeterminate: "DENY", overridesRuleIds: [], severity: "high", enabled: true },
-  { id: "rule.corrected-break-glass", sourceClauseId: "clause.emergency-response", name: "Trusted-system break-glass disclosure", description: "A trusted emergency with unavailable credentials permits a narrower break-glass field set.", priority: 91, appliesToTools: ["disclose_patient_data"], conditionMode: "ALL", conditions: [{ id: "condition.break-glass-credible", fact: "emergency.credible", operator: "EQUALS", value: true, label: "Emergency is credible" }, { id: "condition.break-glass-identity", fact: "actor.identityVerified", operator: "EQUALS", value: null, label: "Responder identity is unavailable" }], effect: "ALLOW_WITH_FIELD_FILTER", allowedFields: [...BREAK_GLASS_EMERGENCY_FIELDS], onIndeterminate: "DENY", overridesRuleIds: [], severity: "high", enabled: true },
-] ;
+  {
+    id: "rule.corrected-verified-minimum-disclosure",
+    sourceClauseId: "clause.emergency-response",
+    name: "Verified responder minimum disclosure",
+    description: "Permit only minimum emergency fields when identity, organization, credibility, imminence, and threat-to-life conditions are verified.",
+    priority: 90,
+    appliesToTools: ["disclose_patient_data"],
+    conditionMode: "ALL",
+    conditions: [
+      { id: "condition.corrected-role", fact: "actor.role", operator: "EQUALS", value: "emergency_responder", label: "Actor role is emergency responder" },
+      { id: "condition.corrected-identity", fact: "actor.identityVerified", operator: "EQUALS", value: true, label: "Responder identity is verified" },
+      { id: "condition.corrected-organization", fact: "actor.organizationVerified", operator: "EQUALS", value: true, label: "Responder organization is verified" },
+      { id: "condition.corrected-credible", fact: "emergency.credible", operator: "EQUALS", value: true, label: "Emergency evidence is credible" },
+      { id: "condition.corrected-imminent", fact: "emergency.imminent", operator: "EQUALS", value: true, label: "Threat is imminent" },
+      { id: "condition.corrected-life", fact: "emergency.threatToLife", operator: "EQUALS", value: true, label: "Threat concerns human life" },
+    ],
+    effect: "ALLOW_WITH_FIELD_FILTER",
+    allowedFields: [...MINIMUM_EMERGENCY_FIELDS],
+    onIndeterminate: "REQUIRE_HUMAN_APPROVAL",
+    overridesRuleIds: [],
+    severity: "critical",
+    enabled: true,
+  },
+  {
+    id: "rule.corrected-break-glass",
+    sourceClauseId: "clause.emergency-response",
+    name: "Trusted-system break-glass disclosure",
+    description: "A trusted emergency with unavailable credentials permits only narrow stabilization fields.",
+    priority: 91,
+    appliesToTools: ["disclose_patient_data"],
+    conditionMode: "ALL",
+    conditions: [
+      { id: "condition.break-glass-role", fact: "actor.role", operator: "EQUALS", value: "emergency_responder", label: "Actor role is emergency responder" },
+      { id: "condition.break-glass-credible", fact: "emergency.credible", operator: "EQUALS", value: true, label: "Emergency evidence is credible" },
+      { id: "condition.break-glass-imminent", fact: "emergency.imminent", operator: "EQUALS", value: true, label: "Threat is imminent" },
+      { id: "condition.break-glass-life", fact: "emergency.threatToLife", operator: "EQUALS", value: true, label: "Threat concerns human life" },
+      { id: "condition.break-glass-identity", fact: "actor.identityVerified", operator: "EQUALS", value: null, label: "Responder credential verification is unavailable" },
+      { id: "condition.break-glass-evidence", fact: "emergency.evidenceSource", operator: "IN", value: ["verified_dispatch", "hospital_system"], label: "Emergency evidence comes from a trusted system" },
+      { id: "condition.break-glass-purpose", fact: "request.purpose", operator: "EQUALS", value: "emergency_response", label: "Request supports emergency response" },
+    ],
+    effect: "ALLOW_WITH_FIELD_FILTER",
+    allowedFields: [...BREAK_GLASS_EMERGENCY_FIELDS],
+    onIndeterminate: "REQUIRE_HUMAN_APPROVAL",
+    overridesRuleIds: ["rule.corrected-verified-minimum-disclosure"],
+    severity: "high",
+    enabled: true,
+  },
+  {
+    id: "rule.corrected-approved-break-glass-disclosure",
+    sourceClauseId: "clause.emergency-response",
+    name: "Privacy-officer approved break-glass disclosure",
+    description: "A trusted emergency with unavailable credentials may disclose narrow fields after privacy-officer approval.",
+    priority: 92,
+    appliesToTools: ["disclose_patient_data"],
+    conditionMode: "ALL",
+    conditions: [
+      { id: "condition.approved-role", fact: "actor.role", operator: "EQUALS", value: "emergency_responder", label: "Actor role is emergency responder" },
+      { id: "condition.approved-credible", fact: "emergency.credible", operator: "EQUALS", value: true, label: "Emergency evidence is credible" },
+      { id: "condition.approved-imminent", fact: "emergency.imminent", operator: "EQUALS", value: true, label: "Threat is imminent" },
+      { id: "condition.approved-life", fact: "emergency.threatToLife", operator: "EQUALS", value: true, label: "Threat concerns human life" },
+      { id: "condition.approved-identity", fact: "actor.identityVerified", operator: "EQUALS", value: null, label: "Responder credential verification is unavailable" },
+      { id: "condition.approved-evidence", fact: "emergency.evidenceSource", operator: "IN", value: ["verified_dispatch", "hospital_system"], label: "Emergency evidence comes from a trusted system" },
+      { id: "condition.approved-purpose", fact: "request.purpose", operator: "EQUALS", value: "privacy_review", label: "Request is a privacy-officer review" },
+      { id: "condition.approved-status", fact: "approval.status", operator: "EQUALS", value: "approved", label: "Privacy-officer approval is recorded" },
+      { id: "condition.approved-approver", fact: "approval.approverRole", operator: "EQUALS", value: "privacy_officer", label: "Approval came from a privacy officer" },
+    ],
+    effect: "ALLOW_WITH_FIELD_FILTER",
+    allowedFields: [...BREAK_GLASS_EMERGENCY_FIELDS],
+    onIndeterminate: "REQUIRE_HUMAN_APPROVAL",
+    overridesRuleIds: ["rule.corrected-verified-minimum-disclosure"],
+    severity: "high",
+    enabled: true,
+  },
+];
+
+const preRepairRules: PolicyRule[] = correctedRules.map((rule) => rule.id === "rule.corrected-verified-minimum-disclosure"
+  ? { ...rule, allowedFields: ["criticalAllergies", "currentEmergencyMedications", "emergencyWarningFlags"] }
+  : rule);
 
 export const LEGACY_POLICY_BUNDLE: PolicyBundle = { schemaVersion: 1, bundleId: "bundle.legacy-v1", versionLabel: "v1.0 — Legacy Emergency Policy", rules: [legacyRule], defaults };
 export const CORRECTED_POLICY_BUNDLE: PolicyBundle = { schemaVersion: 1, bundleId: "bundle.draft-v1-1", versionLabel: "v1.1 Draft", rules: [...correctedRules], defaults };
+export const PRE_REPAIR_POLICY_BUNDLE: PolicyBundle = { schemaVersion: 1, bundleId: "bundle.draft-v1-1", versionLabel: "v1.1 Draft", rules: [...preRepairRules], defaults };

@@ -4,7 +4,7 @@ import { vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { FallbackAiProvider } from "../../../src/ai/fallback-provider";
-import { LEGACY_POLICY_BUNDLE, SEED_CLAUSES } from "../../../src/hospital/fixtures/constitution";
+import { CORRECTED_POLICY_BUNDLE, LEGACY_POLICY_BUNDLE, SEED_CLAUSES } from "../../../src/hospital/fixtures/constitution";
 import { HERO_ATTACK_SCENARIO } from "../../../src/hospital/fixtures/scenarios";
 import { analyzePolicyBundle } from "../../../src/policy-engine/analyze-policy-bundle";
 
@@ -32,12 +32,7 @@ describe("FallbackAiProvider", () => {
 
     const result = await provider.compileClause({ clause: correctedClause, existingBundle: LEGACY_POLICY_BUNDLE });
 
-    expect(result.data.rules[0]).toMatchObject({
-      id: "rule.emergency.verified-minimum-disclosure",
-      effect: "ALLOW_WITH_FIELD_FILTER",
-      onIndeterminate: "REQUIRE_HUMAN_APPROVAL",
-      allowedFields: ["fullName", "bloodType", "criticalAllergies", "currentEmergencyMedications", "emergencyWarningFlags"],
-    });
+    expect(result.data.rules).toEqual(CORRECTED_POLICY_BUNDLE.rules);
     expect(analyzePolicyBundle({ ...LEGACY_POLICY_BUNDLE, rules: result.data.rules })).toEqual([]);
   });
 
