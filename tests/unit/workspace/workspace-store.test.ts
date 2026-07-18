@@ -1,5 +1,6 @@
 import { expect, it } from "vitest";
 
+import type { RegressionRemediation } from "../../../src/activation/regression-remediation";
 import { createSeedWorkspace } from "../../../src/workspace/create-seed-workspace";
 import { createWorkspaceStore, type WorkspaceRepositoryLike } from "../../../src/workspace/workspace-store";
 
@@ -46,4 +47,27 @@ it("blocks direct navigation to a stage whose prerequisites are missing", () => 
   store.getState().setDemoStage("REPLAY");
 
   expect(store.getState().workspace.demoStage).toBe("CONSTITUTION");
+});
+
+it("keeps remediation context outside persisted workspace state and permits its amendment stage", () => {
+  const store = createWorkspaceStore({ seedFactory: createSeedWorkspace });
+  const remediation: RegressionRemediation = {
+    testCaseId: "control.verified-responder-minimum",
+    testName: "Verified responder minimum disclosure",
+    summary: "Patient name and blood type are missing.",
+    sourceClauseId: "clause.emergency-response",
+    sourceRuleIds: ["rule.corrected-verified-minimum-disclosure"],
+    missingFields: ["fullName", "bloodType"],
+    unexpectedFields: [],
+    suggestedClauseText: "Disclose only the minimum emergency fields.",
+  };
+
+  store.getState().startRemediation(remediation);
+  store.getState().selectClause(remediation.sourceClauseId);
+  store.getState().setDemoStage("AMENDMENT");
+
+  expect(store.getState().activeRemediation).toEqual(remediation);
+  expect(store.getState().workspace.demoStage).toBe("AMENDMENT");
+  store.getState().returnHome();
+  expect(store.getState().activeRemediation).toBeNull();
 });

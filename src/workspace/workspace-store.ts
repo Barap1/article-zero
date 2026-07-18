@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 
+import type { RegressionRemediation } from "../activation/regression-remediation";
 import type { AuditEvent, CompilePreview, PolicyBundle, RevisionPreview, WorkspaceState } from "../domain/schemas";
 import { hashPolicyBundle } from "../policy-engine/hash-policy-bundle";
 import { createId } from "../lib/ids";
@@ -19,9 +20,12 @@ export type WorkspaceStore = {
   readonly isHydrating: boolean;
   readonly showBriefing: boolean;
   readonly errorMessage: string | null;
+  readonly activeRemediation: RegressionRemediation | null;
   readonly hydrate: () => Promise<void>;
   readonly openConstitution: () => void;
   readonly returnHome: () => void;
+  readonly startRemediation: (remediation: RegressionRemediation) => void;
+  readonly clearRemediation: () => void;
   readonly setDemoStage: (stage: WorkspaceState["demoStage"]) => void;
   readonly selectClause: (clauseId: string) => void;
   readonly editClause: (clauseId: string, text: string) => void;
@@ -85,12 +89,13 @@ export function createWorkspaceStore(options: CreateWorkspaceStoreOptions = {}) 
       isHydrating: false,
       showBriefing: true,
       errorMessage: null,
+      activeRemediation: null,
       hydrate: async () => {
         if (get().hasHydrated) return;
         if (hydrationPromise) return hydrationPromise;
         set({ isHydrating: true, errorMessage: null });
         hydrationPromise = repository.load().then((persisted) => {
-          set({ workspace: persisted ?? seedFactory(), hasHydrated: true, isHydrating: false, showBriefing: persisted === null });
+          set({ workspace: persisted ?? seedFactory(), hasHydrated: true, isHydrating: false, showBriefing: persisted === null, activeRemediation: null });
         }).catch((error: unknown) => {
           const message = error instanceof Error ? error.message : "Workspace hydration failed.";
           set({ hasHydrated: false, isHydrating: false, errorMessage: message });
@@ -102,9 +107,12 @@ export function createWorkspaceStore(options: CreateWorkspaceStoreOptions = {}) 
         set({ showBriefing: false });
         commit({ type: "SET_DEMO_STAGE", stage: "CONSTITUTION" });
       },
-      returnHome: () => set({ showBriefing: true }),
+      returnHome: () => set({ showBriefing: true, activeRemediation: null }),
+      startRemediation: (remediation) => set({ activeRemediation: remediation, showBriefing: false }),
+      clearRemediation: () => set({ activeRemediation: null }),
       setDemoStage: (stage) => {
-        if (!getWorkflowAvailability(get().workspace)[stage].available) return;
+        const guidedAmendment = stage === "AMENDMENT" && get().activeRemediation !== null;
+        if (!getWorkflowAvailability(get().workspace)[stage].available && !guidedAmendment) return;
         set({ showBriefing: false });
         commit({ type: "SET_DEMO_STAGE", stage });
       },
@@ -139,7 +147,7 @@ export function createWorkspaceStore(options: CreateWorkspaceStoreOptions = {}) 
       },
       resetDemo: async () => {
         const workspace = await repository.reset();
-        set({ workspace, hasHydrated: true, isHydrating: false, showBriefing: true, errorMessage: null });
+        set({ workspace, hasHydrated: true, isHydrating: false, showBriefing: true, errorMessage: null, activeRemediation: null });
       },
       exportAuditPackage: () => repository.export(get().workspace),
     };

@@ -1,8 +1,9 @@
 "use client";
 
 import { assessActivation, SEEDED_REGRESSION_CASES } from "../../../activation";
-import type { ConstitutionVersion, PolicyIssue, WorkspaceState } from "../../../domain/schemas";
-import { formatDisplayLabel } from "../../../lib/display-label";
+import { deriveRegressionRemediation, type RegressionRemediation } from "../../../activation/regression-remediation";
+import type { ConstitutionVersion, PolicyIssue, RegressionTestResult, WorkspaceState } from "../../../domain/schemas";
+import { RegressionResultCard } from "./regression-result-card";
 
 type ActivationPanelProps = {
   readonly draft: ConstitutionVersion;
@@ -11,13 +12,10 @@ type ActivationPanelProps = {
   readonly onRun: (draft: ConstitutionVersion) => Promise<void>;
   readonly onActivate: () => Promise<void>;
   readonly onAcknowledge: (issueId: string) => void;
+  readonly onReviewRepair: (remediation: RegressionRemediation) => void;
   readonly isRunning?: boolean;
   readonly isActivating?: boolean;
 };
-
-function outcomeLabel(outcome: ConstitutionVersion["policyBundle"]["rules"][number]["effect"]): string {
-  return formatDisplayLabel(outcome);
-}
 
 function blockingReason(code: string): string {
   if (code === "SCHEMA_INVALID") return "The draft does not match the policy schema. Restore a valid structured policy before activating.";
@@ -28,21 +26,35 @@ function blockingReason(code: string): string {
   return "Acknowledge every warning before activation.";
 }
 
+function resultRank(result: RegressionTestResult, blockingFailureIds: ReadonlySet<string>): number {
+  if (!result.passed && blockingFailureIds.has(result.testCaseId)) return 0;
+  if (!result.passed) return 1;
+  return 2;
+}
+
 function latestTestRun(workspace: WorkspaceState, draftVersionId: string) {
   return [...workspace.testRuns].reverse().find((run) => run.constitutionVersionId === draftVersionId) ?? null;
 }
 
-export function ActivationPanel({ draft, workspace, issues, onRun, onActivate, onAcknowledge, isRunning = false, isActivating = false }: ActivationPanelProps) {
+export function ActivationPanel({ draft, workspace, issues, onRun, onActivate, onAcknowledge, onReviewRepair, isRunning = false, isActivating = false }: ActivationPanelProps) {
   const testRun = latestTestRun(workspace, draft.id);
   const assessment = assessActivation({ draft, issues, latestTestRun: testRun });
   const warnings = assessment.warningIssues;
+  const blockingFailureIds = new Set(assessment.blockingTestFailures.map((result) => result.testCaseId));
+  const results = testRun === null ? [] : [...testRun.results].sort((left, right) => resultRank(left, blockingFailureIds) - resultRank(right, blockingFailureIds));
 
   return <section className="az-activation-panel" aria-labelledby="activation-panel-title">
     <div className="az-panel-header"><div><p className="az-eyebrow">Deterministic test gate</p><h1 id="activation-panel-title">Activate the amended constitution</h1><p className="az-panel-lede">The policy engine runs the seeded suite. This panel only presents the resulting gate.</p></div><span className={assessment.canActivate ? "az-status-chip" : "az-status-chip az-status-dirty"}>{assessment.canActivate ? "Ready to activate" : "Activation blocked"}</span></div>
     <section className="az-activation-card" aria-labelledby="regression-suite-title">
       <div className="az-section-heading"><div><p className="az-eyebrow">Regression suite</p><h2 id="regression-suite-title">{SEEDED_REGRESSION_CASES.length} named policy tests</h2></div><button className="az-button az-button-primary" type="button" onClick={() => { void onRun(draft); }} disabled={isRunning}>{isRunning ? "Running tests…" : "Run regression suite"}</button></div>
       <p className="az-help-text">Bundle freshness: {testRun === null ? "Not tested yet" : testRun.bundleHash === draft.bundleHash ? `Current bundle tested · ${draft.bundleHash.slice(0, 12)}` : "Stale test run · this draft needs a fresh run"}.</p>
-      {testRun === null ? <p className="az-help-text">No result exists for this exact bundle hash yet.</p> : <ul className="az-test-results" aria-label="Regression results">{testRun.results.map((result) => { const testCase = SEEDED_REGRESSION_CASES.find((candidate) => candidate.id === result.testCaseId); return <li key={result.testCaseId} className={result.passed ? "az-test-pass" : "az-test-fail"}><strong>{result.passed ? "Pass" : "Fail"}</strong><span>{testCase?.name ?? "Named policy test"}</span><small>{outcomeLabel(result.actualOutcome)} · {result.actualPermittedFields.length} permitted field{result.actualPermittedFields.length === 1 ? "" : "s"}</small>{!result.passed && result.failureDetail ? <p className="az-error-copy">{result.failureDetail}</p> : null}</li>; })}</ul>}
+      {testRun === null ? <p className="az-help-text">No result exists for this exact bundle hash yet.</p> : <ul className="az-test-results" aria-label="Regression results">{results.map((result) => {
+        const testCase = SEEDED_REGRESSION_CASES.find((candidate) => candidate.id === result.testCaseId);
+        if (testCase === undefined) return null;
+        const remediation = deriveRegressionRemediation({ version: draft, testCase, result });
+        const repairProps = blockingFailureIds.has(result.testCaseId) && remediation !== null ? { onReviewRepair } : {};
+        return <RegressionResultCard key={result.testCaseId} testCase={testCase} result={result} remediation={remediation} {...repairProps} />;
+      })}</ul>}
     </section>
     <details className="az-activation-card az-activation-details">
       <summary>Review risk acknowledgements</summary>

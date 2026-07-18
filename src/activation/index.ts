@@ -2,3 +2,4 @@ export { activateConstitution, ActivationPreconditionError, type ActivationTrans
 export { assessActivation } from "./assess-activation";
 export { runRegressionSuite } from "./run-regression-suite";
 export { SEEDED_REGRESSION_CASES } from "./seeded-regression-cases";
+export { deriveRegressionRemediation, type RegressionRemediation } from "./regression-remediation";

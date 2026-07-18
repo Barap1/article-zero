@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 
 import { analyzePolicyBundle } from "../../policy-engine/analyze-policy-bundle";
+import type { RegressionRemediation } from "../../activation/regression-remediation";
+import type { ConstitutionVersion } from "../../domain/schemas";
 import { ProviderStatusBadge } from "./provider-status-badge";
 import { useActivateConstitution } from "../../hooks/use-activate-constitution";
 import { useDemoKeyboardShortcuts } from "../../hooks/use-demo-keyboard-shortcuts";
@@ -29,9 +31,12 @@ export function ArticleZeroCommandCenter() {
   const hasHydrated = useWorkspaceStore((state) => state.hasHydrated);
   const isHydrating = useWorkspaceStore((state) => state.isHydrating);
   const showBriefing = useWorkspaceStore((state) => state.showBriefing);
+  const activeRemediation = useWorkspaceStore((state) => state.activeRemediation);
   const hydrate = useWorkspaceStore((state) => state.hydrate);
   const openConstitution = useWorkspaceStore((state) => state.openConstitution);
   const returnHome = useWorkspaceStore((state) => state.returnHome);
+  const startRemediation = useWorkspaceStore((state) => state.startRemediation);
+  const clearRemediation = useWorkspaceStore((state) => state.clearRemediation);
   const setDemoStage = useWorkspaceStore((state) => state.setDemoStage);
   const resetDemo = useWorkspaceStore((state) => state.resetDemo);
   const exportAuditPackage = useWorkspaceStore((state) => state.exportAuditPackage);
@@ -75,6 +80,17 @@ export function ArticleZeroCommandCenter() {
     try { await resetDemo(); setResetOpen(false); } finally { setIsResetting(false); }
   };
 
+  const handleReviewRepair = (remediation: RegressionRemediation): void => {
+    startRemediation(remediation);
+    selectClause(remediation.sourceClauseId);
+    setDemoStage("AMENDMENT");
+  };
+
+  const handleRun = async (version: ConstitutionVersion): Promise<void> => {
+    const result = await runRegression.submit(version);
+    if (result !== null && activeRemediation !== null && result.results.some((testResult) => testResult.testCaseId === activeRemediation.testCaseId && testResult.passed)) clearRemediation();
+  };
+
   if (!hasHydrated || isHydrating) {
     return <main className="az-shell az-shell-loading"><a className="az-skip-link" href="#article-zero-main">Skip to command surface</a><div className="az-loading-mark" aria-hidden="true" /><p role="status">Restoring the local workspace…</p></main>;
   }
@@ -105,7 +121,7 @@ export function ArticleZeroCommandCenter() {
             const draft = workspace.versions.find((version) => version.id === workspace.draftVersionId);
             if (draft === undefined) return <p role="alert" className="az-error-copy">The draft policy is unavailable. Return to the policy workspace and try again.</p>;
             const issues = analyzePolicyBundle(draft.policyBundle);
-            return <ActivationPanel draft={draft} workspace={workspace} issues={issues} isRunning={runRegression.isLoading} isActivating={activateConstitution.isLoading} onRun={async (version) => { await runRegression.submit(version); }} onActivate={async () => { const result = await activateConstitution.submit({ workspace, draftVersionId: draft.id, issues }); if (result !== null) setDemoStage("REPLAY"); }} onAcknowledge={acknowledgeIssue} />;
+            return <ActivationPanel draft={draft} workspace={workspace} issues={issues} isRunning={runRegression.isLoading} isActivating={activateConstitution.isLoading} onRun={handleRun} onActivate={async () => { const result = await activateConstitution.submit({ workspace, draftVersionId: draft.id, issues }); if (result !== null) setDemoStage("REPLAY"); }} onAcknowledge={acknowledgeIssue} onReviewRepair={handleReviewRepair} />;
           })() : workspace.demoStage === "REPLAY" ? <ReplayComparison activeVersion={activeVersion} legacyAttack={workspace.attackRuns.find((run) => run.scenarioId === "scenario.fake-responder-full-record" && run.constitutionVersionId !== activeVersion.id)} onAddAttackRun={addAttackRun} onAddAuditEvents={addAuditEvents} onComplete={() => setDemoStage("COMPLETE")} /> : <CompletionSummary onOpenAudit={() => setAuditOpen(true)} onExport={() => { void handleExport(); }} onReturnHome={returnHome} onStartAnotherSimulation={() => { void resetDemo(); }} isExporting={isExporting} />}
           </motion.div>
           </AnimatePresence>
