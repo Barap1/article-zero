@@ -1,5 +1,5 @@
-import { ArticleZeroCommandCenter } from "../components/article-zero/article-zero-command-center";
+import { ArticleZeroLanding } from "../components/landing/article-zero-landing";
 
 export default function HomePage() {
-  return <ArticleZeroCommandCenter />;
+  return <ArticleZeroLanding />;
 }

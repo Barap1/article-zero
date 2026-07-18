@@ -9,7 +9,7 @@ export default defineConfig({
     command: "pnpm exec next dev --port 3001",
     url: "http://localhost:3001",
     reuseExistingServer: false,
-    env: { ...process.env, GROQ_API_KEY: "", DEMO_FALLBACKS_ENABLED: "true" },
+    env: { ...process.env, GROQ_API_KEY: "", DEMO_FALLBACKS_ENABLED: "true", NEXT_PUBLIC_E2E_AUTH_BYPASS: "true" },
   },
   use: {
     baseURL: "http://localhost:3001",

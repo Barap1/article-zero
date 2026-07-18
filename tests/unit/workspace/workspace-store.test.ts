@@ -71,3 +71,19 @@ it("keeps remediation context outside persisted workspace state and permits its 
   store.getState().returnHome();
   expect(store.getState().activeRemediation).toBeNull();
 });
+
+it("ignores a previous user's late hydration after repository disconnect", async () => {
+  let resolveA: ((value: ReturnType<typeof createSeedWorkspace> | null) => void) | undefined;
+  const repositoryA = repositoryWith(null);
+  repositoryA.load = () => new Promise((resolve) => { resolveA = resolve; });
+  const workspaceB = { ...createSeedWorkspace(), demoStage: "ATTACK" as const };
+  const store = createWorkspaceStore({ repository: repositoryA });
+
+  const loadingA = store.getState().connectRepository(repositoryA);
+  store.getState().disconnectRepository();
+  await store.getState().connectRepository(repositoryWith(workspaceB));
+  resolveA?.(createSeedWorkspace());
+  await loadingA;
+
+  expect(store.getState().workspace.demoStage).toBe("ATTACK");
+});

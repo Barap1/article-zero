@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { ClipboardList, Download, RotateCcw } from "lucide-react";
+import { useAuth } from "../../auth/auth-provider";
 
 type AppHeaderProps = {
   readonly onReturnHome: () => void;
@@ -12,6 +13,8 @@ type AppHeaderProps = {
 };
 
 export function AppHeader({ onReturnHome, onReset, onExport, onOpenAudit, isExporting }: AppHeaderProps) {
+  const { user, signOutUser } = useAuth();
+  const accountLabel = user?.displayName ?? user?.email ?? "Test workspace";
   return (
     <header className="az-header">
       <button className="az-brand-lockup az-brand-button" type="button" onClick={onReturnHome} aria-label="Article Zero, return home">
@@ -31,6 +34,10 @@ export function AppHeader({ onReturnHome, onReset, onExport, onOpenAudit, isExpo
             <RotateCcw size={15} aria-hidden="true" />
             <span className="az-button-label">Reset</span>
           </button>
+          <details className="az-user-menu">
+            <summary className="az-user-trigger"><span className="az-user-avatar" aria-hidden="true">{accountLabel.slice(0, 1).toUpperCase()}</span><span className="az-user-label">{accountLabel}</span></summary>
+            <div className="az-user-popover"><p className="az-eyebrow">Signed-in workspace</p><strong>{accountLabel}</strong><button className="az-button az-button-secondary" type="button" onClick={() => { void signOutUser(); }}>Sign out</button></div>
+          </details>
       </div>
     </header>
   );

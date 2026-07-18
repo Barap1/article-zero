@@ -3,7 +3,7 @@
 import { create } from "zustand";
 
 import type { RegressionRemediation } from "../activation/regression-remediation";
-import type { AuditEvent, CompilePreview, PolicyBundle, RevisionPreview, WorkspaceState } from "../domain/schemas";
+import { WorkspaceStateSchema, type AuditEvent, type CompilePreview, type PolicyBundle, type RevisionPreview, type WorkspaceState } from "../domain/schemas";
 import { hashPolicyBundle } from "../policy-engine/hash-policy-bundle";
 import { createId } from "../lib/ids";
 import { createSeedWorkspace } from "./create-seed-workspace";
@@ -22,6 +22,8 @@ export type WorkspaceStore = {
   readonly errorMessage: string | null;
   readonly activeRemediation: RegressionRemediation | null;
   readonly hydrate: () => Promise<void>;
+  readonly connectRepository: (repository: WorkspaceRepositoryLike) => Promise<void>;
+  readonly disconnectRepository: () => void;
   readonly openConstitution: () => void;
   readonly returnHome: () => void;
   readonly startRemediation: (remediation: RegressionRemediation) => void;
@@ -64,23 +66,26 @@ function defaultRepository(seedFactory: () => WorkspaceState): WorkspaceReposito
   return new LocalStorageWorkspaceRepository({ storage: window.localStorage, seedFactory });
 }
 
-function persist(repository: WorkspaceRepositoryLike, set: (partial: Partial<WorkspaceStore>) => void, workspace: WorkspaceState): void {
-  void repository.save(workspace).catch((error: unknown) => {
-    const message = error instanceof Error ? error.message : "Workspace persistence failed.";
-    set({ errorMessage: message });
-  });
-}
-
 export function createWorkspaceStore(options: CreateWorkspaceStoreOptions = {}) {
   const seedFactory = options.seedFactory ?? (() => createSeedWorkspace());
-  const repository = options.repository ?? defaultRepository(seedFactory);
+  let repository = options.repository ?? defaultRepository(seedFactory);
+  let repositoryGeneration = 0;
   let hydrationPromise: Promise<void> | undefined;
 
   const store = create<WorkspaceStore>((set, get) => {
+    const persistCurrent = (workspace: WorkspaceState): void => {
+      const targetRepository = repository;
+      const generation = repositoryGeneration;
+      void targetRepository.save(workspace).catch((error: unknown) => {
+        if (generation !== repositoryGeneration || targetRepository !== repository) return;
+        const message = error instanceof Error ? error.message : "Workspace persistence failed.";
+        set({ errorMessage: message });
+      });
+    };
     const commit = (action: WorkspaceAction): void => {
       const workspace = workspaceReducer(get().workspace, action);
       set({ workspace, errorMessage: null });
-      persist(repository, set, workspace);
+      persistCurrent(workspace);
     };
 
     return {
@@ -90,17 +95,44 @@ export function createWorkspaceStore(options: CreateWorkspaceStoreOptions = {}) 
       showBriefing: true,
       errorMessage: null,
       activeRemediation: null,
-      hydrate: async () => {
-        if (get().hasHydrated) return;
-        if (hydrationPromise) return hydrationPromise;
-        set({ isHydrating: true, errorMessage: null });
-        hydrationPromise = repository.load().then((persisted) => {
+      connectRepository: async (nextRepository) => {
+        const generation = ++repositoryGeneration;
+        repository = nextRepository;
+        hydrationPromise = undefined;
+        set({ hasHydrated: false, isHydrating: true, errorMessage: null, activeRemediation: null });
+        try {
+          const persisted = await nextRepository.load();
+          if (generation !== repositoryGeneration || repository !== nextRepository) return;
           set({ workspace: persisted ?? seedFactory(), hasHydrated: true, isHydrating: false, showBriefing: persisted === null, activeRemediation: null });
-        }).catch((error: unknown) => {
+        } catch (error: unknown) {
+          if (generation !== repositoryGeneration || repository !== nextRepository) return;
           const message = error instanceof Error ? error.message : "Workspace hydration failed.";
           set({ hasHydrated: false, isHydrating: false, errorMessage: message });
           throw error;
-        }).finally(() => { hydrationPromise = undefined; });
+        }
+      },
+      disconnectRepository: () => {
+        repositoryGeneration += 1;
+        repository = memoryRepository(seedFactory);
+        hydrationPromise = undefined;
+        set({ workspace: seedFactory(), hasHydrated: false, isHydrating: false, showBriefing: true, errorMessage: null, activeRemediation: null });
+      },
+      hydrate: async () => {
+        if (get().hasHydrated) return;
+        if (hydrationPromise) return hydrationPromise;
+        const targetRepository = repository;
+        const generation = repositoryGeneration;
+        set({ isHydrating: true, errorMessage: null });
+        const promise = targetRepository.load().then((persisted) => {
+          if (generation !== repositoryGeneration || targetRepository !== repository) return;
+          set({ workspace: persisted ?? seedFactory(), hasHydrated: true, isHydrating: false, showBriefing: persisted === null, activeRemediation: null });
+        }).catch((error: unknown) => {
+          if (generation !== repositoryGeneration || targetRepository !== repository) return;
+          const message = error instanceof Error ? error.message : "Workspace hydration failed.";
+          set({ hasHydrated: false, isHydrating: false, errorMessage: message });
+          throw error;
+        }).finally(() => { if (hydrationPromise === promise) hydrationPromise = undefined; });
+        hydrationPromise = promise;
         return hydrationPromise;
       },
       openConstitution: () => {
@@ -143,13 +175,16 @@ export function createWorkspaceStore(options: CreateWorkspaceStoreOptions = {}) 
       setProviderStatus: (status) => {
         const workspace = { ...get().workspace, providerStatus: status };
         set({ workspace, errorMessage: null });
-        persist(repository, set, workspace);
+        persistCurrent(workspace);
       },
       resetDemo: async () => {
-        const workspace = await repository.reset();
+        const targetRepository = repository;
+        const generation = repositoryGeneration;
+        const workspace = await targetRepository.reset();
+        if (generation !== repositoryGeneration || targetRepository !== repository) return;
         set({ workspace, hasHydrated: true, isHydrating: false, showBriefing: true, errorMessage: null, activeRemediation: null });
       },
-      exportAuditPackage: () => repository.export(get().workspace),
+      exportAuditPackage: () => repository.export(WorkspaceStateSchema.parse(get().workspace)),
     };
   });
 

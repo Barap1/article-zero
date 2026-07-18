@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { AuthProvider } from "../auth/auth-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Article Zero",
-  description: "A calm workspace for authoring, testing, and enforcing synthetic hospital-agent policy.",
+  description: "Author, test, and enforce AI-agent policy with a deterministic boundary and an audit trail.",
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><AuthProvider>{children}</AuthProvider></body>
     </html>
   );
 }

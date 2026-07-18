@@ -2,7 +2,7 @@
 
 **Turn plain-language AI policies into enforceable controls—and test them before they govern an agent.**
 
-Article Zero is a policy-authoring and enforcement prototype for AI agents. It lets a user write policy in natural language, compiles that policy into a typed rule set, enforces the rules at the tool boundary, and stress-tests the result with replayable adversarial scenarios.
+Article Zero is a policy-authoring and enforcement prototype for AI agents. It lets a signed-in user write policy in natural language, compiles that policy into a typed rule set, enforces the rules at the tool boundary, and stress-tests the result with replayable adversarial scenarios.
 
 The current prototype uses a fully synthetic hospital emergency-disclosure scenario to demonstrate the core idea:
 
@@ -10,6 +10,8 @@ The current prototype uses a fully synthetic hospital emergency-disclosure scena
 
 ## Demo
 [article--zero.vercel.app](article--zero.vercel.app)
+
+The public landing page is available at `/`. The Article Zero workspace lives at `/workspace` and requires Firebase Authentication; there is no guest workspace.
 
 ## Why Article Zero
 
@@ -44,7 +46,7 @@ The language model proposes structured rules. It does **not** make the final enf
 - **Regression-gated activation** so unsafe policy versions cannot go live
 - **Exact attack replay** to prove whether an amendment fixed the failure
 - **Human approval workflows** for ambiguous or break-glass situations
-- **Versioned local workspaces** and exportable audit history
+- **Versioned private workspaces** and exportable audit history
 
 ## Demonstration flow
 
@@ -68,7 +70,7 @@ All identities, records, credentials, incidents, and outcomes are fictional.
 Next.js interface
 ├── Constitution and policy authoring
 ├── Attack, incident, testing, and replay workflows
-└── Local versioned workspace
+└── Authenticated versioned workspace
         │
         ├── Groq policy intelligence
         │   ├── Compile natural-language clauses
@@ -87,19 +89,31 @@ Next.js interface
             └── Record audit events
 ```
 
-The Groq API key remains server-side. Protected tools can only execute after the deterministic policy gateway returns an executable decision.
+The Groq API key remains server-side. Groq interprets policy and proposes structured controls; deterministic code makes the final enforcement decision. Protected tools can only execute after the deterministic policy gateway returns an executable decision.
+
+## Firebase setup
+
+This pass uses the Firebase Web SDK only. Add the six `NEXT_PUBLIC_FIREBASE_*` values from your Firebase Web app to `.env.local`, enable Google and Email/Password providers, create Firestore in production mode, deploy the checked-in rules, and add your Vercel domain under Authentication → Settings → Authorized domains. See [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for the exact console and deployment steps.
+
+Each signed-in user owns one workspace document at:
+
+```text
+users/{uid}/workspaces/article-zero-default
+```
+
+Firestore rules deny access by default and permit a user to access only their own profile and workspace documents. Firebase is client-only in this pass: the existing Groq API routes remain server-side for `GROQ_API_KEY`, but they do not verify Firebase identity tokens. Do not describe those routes as Firebase-authenticated.
 
 ## Tech stack
 
 - **Framework:** Next.js 15, React 19, TypeScript
 - **Styling:** Tailwind CSS
-- **State:** Zustand with browser-local persistence
+- **State:** Zustand with per-user Firestore persistence
 - **Validation:** Zod
 - **AI:** Groq SDK with structured JSON outputs
 - **Policy visualization:** React Flow
 - **Motion:** Motion for React
 - **Testing:** Vitest, Testing Library, Playwright
-- **Deployment:** Vercel-compatible, stateless architecture
+- **Deployment:** Vercel-compatible, client-only Firebase integration
 
 ## Getting started
 
@@ -134,7 +148,7 @@ Then start the development server:
 pnpm dev
 ```
 
-Open `http://localhost:3000`.
+Open `http://localhost:3000`, create an account or sign in, then open the private workspace. The public landing page is intentionally accessible before authentication.
 
 
 ## Project structure

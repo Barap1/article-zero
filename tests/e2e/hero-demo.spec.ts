@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("sample repair workflow runs from breach to audit export", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Open the policy workspace" }).click();
+  await expect(page).toHaveURL(/\/workspace$/);
   await page.getByRole("tab", { name: /attack/i }).click();
   await page.getByRole("button", { name: /run request/i }).click();
   await page.getByRole("button", { name: /view incident/i }).click();
