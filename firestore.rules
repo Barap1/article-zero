@@ -1,4 +1,5 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedInAs(userId) {
@@ -8,15 +9,25 @@ service cloud.firestore {
     match /users/{userId} {
       allow create: if signedInAs(userId)
         && request.resource.data.ownerId == userId;
-      allow read, update: if signedInAs(userId)
+
+      allow read: if signedInAs(userId);
+
+      allow update: if signedInAs(userId)
         && resource.data.ownerId == userId
         && request.resource.data.ownerId == userId;
+
       allow delete: if false;
 
       match /workspaces/{workspaceId} {
-        allow read: if signedInAs(userId) && resource.data.ownerId == userId;
-        allow create, update: if signedInAs(userId)
+        allow read: if signedInAs(userId);
+
+        allow create: if signedInAs(userId)
           && request.resource.data.ownerId == userId;
+
+        allow update: if signedInAs(userId)
+          && resource.data.ownerId == userId
+          && request.resource.data.ownerId == userId;
+
         allow delete: if signedInAs(userId)
           && resource.data.ownerId == userId;
       }
